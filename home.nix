@@ -20,7 +20,15 @@ in
     nerd-fonts.hack
   ];
   fonts.fontconfig.enable = true;
-  home.sessionVariables.EDITOR = "nvim";
+  home.sessionVariables = {
+    EDITOR = "nvim";
+    # openssl@3 is keg-only, so tell builds (asdf ruby/python, pkg-config) where it lives.
+    # /opt/homebrew is the Apple Silicon prefix; use /usr/local on Intel.
+    RUBY_CONFIGURE_OPTS = "--with-openssl-dir=/opt/homebrew/opt/openssl@3";
+    PKG_CONFIG_PATH = "/opt/homebrew/opt/openssl@3/lib/pkgconfig";
+    # asdf-erlang builds OTP with kerl; link crypto against openssl@3 and skip the Java bindings.
+    KERL_CONFIGURE_OPTIONS = "--with-ssl=/opt/homebrew/opt/openssl@3 --without-javac";
+  };
 
   programs.zsh = {
     enable = true;
@@ -28,6 +36,14 @@ in
     syntaxHighlighting.enable = true;  # commands turn green when valid
     initContent = ''
       bindkey '^f' autosuggest-accept
+      # Set here, not in sessionPath, so it lands after /etc/zshrc runs `brew shellenv`
+      # and these win over Homebrew's bin and macOS's LibreSSL openssl.
+      export PATH="/opt/homebrew/opt/openssl@3/bin:$PATH"
+      export PATH="''${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
+      # nvm comes from Homebrew; node versions stay in ~/.nvm so they survive brew upgrades.
+      export NVM_DIR="$HOME/.nvm"
+      [ -s /opt/homebrew/opt/nvm/nvm.sh ] && . /opt/homebrew/opt/nvm/nvm.sh
+      [ -s /opt/homebrew/opt/nvm/etc/bash_completion.d/nvm ] && . /opt/homebrew/opt/nvm/etc/bash_completion.d/nvm
     '';
     shellAliases = {
       ".." = "cd ..";
