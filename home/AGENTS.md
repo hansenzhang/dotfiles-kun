@@ -14,6 +14,17 @@
   If you see one, even if it is not caused by what you are working on right now, still get it fixed.
 - Before using "dynamic workflows", "ultra code" or any harness feature that immediately spawns a large swarm of subagents, always explain the tradeoffs and ask the user for explicit approval.
 
+## Working rules
+
+- Architecture before code. For a new module, write or update its design note first. Keep one `.md` per module next to the code (or under `docs/modules/`) and update it in the same commit.
+- Work from briefs. When a prompt points at a brief (plans/NN, tasks/NNN, a design-doc phase, a GitHub issue), its acceptance criteria are the definition of done. When finished, append an "As built (date)" note to the brief: what changed, commits, measurements, open follow-ups.
+- Verification. Say which acceptance checks you ran and which need me (device, production, my real data). Never report a check as done that you could not run.
+- Parallel sessions. Other sessions may be working in this checkout. Stage and commit only the files you changed (`git add <paths>`, never `-A`), or work in a worktree.
+- Commits. Follow the repo's CLAUDE.md or AGENTS.md commit and push policy. If it has none, commit only when asked, and write a body that says why.
+- Commit times. No commit may carry an author or committer date between 08:00 and 18:00 local time, Monday to Friday. If you commit (or amend, rebase, cherry-pick) inside that window, set both dates to the same day from 18:00 on, later than HEAD's dates and a few minutes apart per commit, e.g. `GIT_AUTHOR_DATE="2026-10-28T18:05:00" GIT_COMMITTER_DATE="2026-10-28T18:05:00" git commit ...`. Check with `git log -1 --format='%ai %ci'`.
+- Decisions go in the repo (ADR or design doc, dated), not in memory. Memory is for facts about me and this machine.
+- In someone else's repo, keep notes outside it, and check `git log` before stating what the repo contains.
+
 ## Maintaining this file
 
 Keep this file for knowledge useful to almost every future agent session in this project.

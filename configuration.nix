@@ -27,6 +27,7 @@
   };
   nix-homebrew = {
     enable = true;
+    autoMigrate = true;
     inherit user;
   };
   homebrew = {
@@ -36,6 +37,16 @@
     onActivation.extraFlags = [ "--force" ];
     brews = [
       "herdr"
+      "tmux"
+      "gh"        # GitHub CLI
+      "asdf"      # runtime version manager; shims are wired up in home.nix
+      "openssl@3" # keg-only; home.nix points PATH and build tools at it
+      "opentofu"  # open-source Terraform fork; command is `tofu`
+      "autoconf"  # asdf-erlang needs it to build Erlang/OTP
+      "gdal"      # ogr2ogr, for refactored-dollop's tile pipeline
+      "tippecanoe"
+      "nvm"       # Node version manager; loaded in home.nix
+      "uv"        # Python; home.nix installs the default interpreter with it
     ];
     casks = [
       "wezterm"
