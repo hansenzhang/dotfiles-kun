@@ -1,4 +1,4 @@
-{ config, pkgs, user, ... }:
+{ config, lib, pkgs, user, ... }:
 
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
@@ -28,7 +28,18 @@ in
     PKG_CONFIG_PATH = "/opt/homebrew/opt/openssl@3/lib/pkgconfig";
     # asdf-erlang builds OTP with kerl; link crypto against openssl@3 and skip the Java bindings.
     KERL_CONFIGURE_OPTIONS = "--with-ssl=/opt/homebrew/opt/openssl@3 --without-javac";
+    # Projects get uv-downloaded Pythons, never Homebrew's (a gdal dependency) or macOS's 3.9.
+    UV_PYTHON_PREFERENCE = "only-managed";
   };
+
+  # Global python/python3 shims in ~/.local/bin. Idempotent, so a no-op once installed.
+  # uv comes from Homebrew (configuration.nix): its Python download list is baked into the
+  # binary, and brew's uv tracks upstream releases much faster than the nixpkgs channel.
+  home.activation.uvPython = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    if [ -x /opt/homebrew/bin/uv ]; then
+      run /opt/homebrew/bin/uv python install --default 3.15
+    fi
+  '';
 
   programs.zsh = {
     enable = true;
@@ -40,6 +51,8 @@ in
       # and these win over Homebrew's bin and macOS's LibreSSL openssl.
       export PATH="/opt/homebrew/opt/openssl@3/bin:$PATH"
       export PATH="''${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
+      # uv's python/python3 shims and `uv tool install` binaries.
+      export PATH="$HOME/.local/bin:$PATH"
       # nvm comes from Homebrew; node versions stay in ~/.nvm so they survive brew upgrades.
       export NVM_DIR="$HOME/.nvm"
       [ -s /opt/homebrew/opt/nvm/nvm.sh ] && . /opt/homebrew/opt/nvm/nvm.sh
@@ -51,8 +64,34 @@ in
       push = "git push";
       pull = "git pull";
       m = "git switch main";
+      g = "git";  # g co, g ol, g st
+      ll = "ls -alGh";
+      v = "nvim";
       cc = "claude --dangerously-skip-permissions";
       co = "codex --full-auto";
+    };
+  };
+
+  # Ctrl-R history, Ctrl-T file path, Alt-C cd. fd makes the pickers skip .git and gitignored files.
+  programs.fzf = {
+    enable = true;
+    defaultCommand = "fd --type f --hidden --exclude .git";
+    fileWidgetCommand = "fd --type f --hidden --exclude .git";
+    changeDirWidgetCommand = "fd --type d --hidden --exclude .git";
+  };
+
+  # Replaces the hand-written ~/.gitconfig; aliases are `git <name>` subcommands.
+  programs.git = {
+    enable = true;
+    settings = {
+      user.name = "hansenzhang";
+      user.email = "hansen@hansenzhang.com";
+      pull.ff = "only";
+      alias = {
+        co = "checkout";
+        st = "status";
+        ol = "log --all --graph --date=format:'%Y-%m-%d %H:%M' --format='%C(auto)%h %C(blue)%ad %C(green)(%ar)%C(auto)%d %s %C(dim)<%an>'";
+      };
     };
   };
 

@@ -46,6 +46,7 @@
       "gdal"      # ogr2ogr, for refactored-dollop's tile pipeline
       "tippecanoe"
       "nvm"       # Node version manager; loaded in home.nix
+      "uv"        # Python; home.nix installs the default interpreter with it
     ];
     casks = [
       "wezterm"
