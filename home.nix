@@ -87,6 +87,7 @@ in
       user.name = "hansenzhang";
       user.email = "hansen@hansenzhang.com";
       pull.ff = "only";
+      push.autoSetupRemote = true; 
       alias = {
         co = "checkout";
         st = "status";
