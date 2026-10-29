@@ -3,6 +3,12 @@
 # Run this once. After it finishes, use ./rebuild.sh for every later change.
 set -euo pipefail
 
+if [ "$(uname -s)" != "Darwin" ]; then
+  echo "bootstrap.sh is for macOS. NixOS servers are installed with nixos-anywhere:"
+  echo "see docs/oracle-cloud-nixos.md."
+  exit 1
+fi
+
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 
 echo "==> Step 1: Determinate Nix"

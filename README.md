@@ -13,6 +13,9 @@ Watch the walkthrough: https://youtu.be/5N-okeDdIuI
 My personal Mac setup, managed with nix-darwin and home-manager.
 One repo, one command, and a fresh Mac ends up configured the same way every time.
 
+The same flake also defines `oci`, a headless NixOS server on an Oracle Cloud Ampere A1 instance that shares the Mac's shell, editor, and agent configs.
+Installing it is a separate path, covered in [docs/oracle-cloud-nixos.md](docs/oracle-cloud-nixos.md); everything else in this README is about the Mac.
+
 ## Contributing / Using This Repo
 
 These are my personal dotfiles, shared publicly so people can read them, learn from them, and fork them freely.
@@ -95,7 +98,7 @@ If you clone it, review these before you run `bootstrap.sh`:
 
 - **Username**: run `./bootstrap.sh` (it detects your macOS username and offers to set it) OR change the single `user = "kunchen"` line in `flake.nix`.
   Everything else (`configuration.nix`, `home.nix`, home directory paths) is threaded from that one variable.
-- **Host label** `"mac"`, in three places: `flake.nix` (the `darwinConfigurations."mac"` name), `rebuild.sh:5` (the `#mac` at the end of the flake reference), and `bootstrap.sh`'s first-switch command (also `#mac`).
+- **Host label** `"mac"`, in three places: `flake.nix` (the `darwinConfigurations."mac"` name), `rebuild.sh` (the `#mac` in the `Darwin)` line), and `bootstrap.sh`'s first-switch command (also `#mac`).
   All three have to match.
 - **CPU architecture**, `hostPlatform` in `configuration.nix` (see Prerequisites above).
 
@@ -132,10 +135,13 @@ If you don't use it, just remove it from `brews` in your copy.
 ## Repo tour
 
 - `flake.nix` - the entry point.
-  Wires up nixpkgs, nix-darwin, home-manager, and nix-homebrew, and declares the `mac` machine.
+  Wires up nixpkgs, nix-darwin, home-manager, nix-homebrew, and disko, and declares the `mac` and `oci` machines.
 - `configuration.nix` - system-level config: macOS defaults, Homebrew.
-- `home.nix` - user-level config: shell, packages, prompt, and the symlinks described below.
-- `rebuild.sh` - re-applies the config after the first switch.
+- `home.nix` - user-level config shared by both machines: shell, packages, prompt, and the symlinks described below.
+- `home-darwin.nix`, `home-linux.nix` - the per-platform layers on top of `home.nix` (Homebrew paths and WezTerm on the Mac; the Homebrew CLI tools from nixpkgs on Linux).
+- `hosts/oci/` - the NixOS server's system config, hardware, and disk layout. See [docs/oracle-cloud-nixos.md](docs/oracle-cloud-nixos.md).
+- `pkgs/` - packages nixpkgs doesn't have (herdr's Linux binary).
+- `rebuild.sh` - re-applies the config after the first switch, on either machine.
   Run this every time you make a change.
 - `home/` - the actual config files that get symlinked into place; the sections below explain the shared symlink model and Pi's narrower selective setup.
 
