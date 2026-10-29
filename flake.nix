@@ -6,6 +6,8 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-26.05-darwin";
     # The darwin branch above only carries Mac binaries; NixOS hosts build from this one.
     nixos.url = "github:NixOS/nixpkgs/nixos-26.05";
+    # Stable lags fast-moving tools by weeks; oci takes only claude-code from here.
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     # Use `github:nix-darwin/nix-darwin/nix-darwin-26.05` to use Nixpkgs 26.05.
     nix-darwin.url = "github:nix-darwin/nix-darwin/nix-darwin-26.05";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
@@ -18,7 +20,7 @@
     disko.inputs.nixpkgs.follows = "nixos";
   };
 
-  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixos, disko }:
+  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixos, nixpkgs-unstable, disko }:
     let
       # The one username line to change if this isn't your machine.
       # bootstrap.sh offers to rewrite this for you if your macOS username differs.
@@ -53,6 +55,16 @@
           ./hosts/oci/configuration.nix
           ./hosts/oci/hardware.nix
           ./hosts/oci/disk.nix
+          {
+            nixpkgs.overlays = [
+              (final: prev: {
+                claude-code = (import nixpkgs-unstable {
+                  system = prev.stdenv.hostPlatform.system;
+                  config.allowUnfree = true;
+                }).claude-code;
+              })
+            ];
+          }
           home-manager.nixosModules.home-manager
           (homeManager ./home-linux.nix)
         ];

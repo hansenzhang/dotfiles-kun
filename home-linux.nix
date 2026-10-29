@@ -10,11 +10,11 @@
     tmux
     gh          # GitHub CLI
     uv          # Python; the activation below installs the default interpreter with it
-    nodejs_24   # stands in for nvm; global npm installs go to ~/.npm-global
+    nodejs_26   # stands in for nvm; global npm installs go to ~/.npm-global
     opentofu    # open-source Terraform fork; command is `tofu`
     gdal        # ogr2ogr
     tippecanoe
-    claude-code
+    claude-code # from nixos-unstable via the overlay in flake.nix
   ];
   home.sessionVariables = {
     # The Nix store is read-only, so `npm install -g` needs a user prefix.

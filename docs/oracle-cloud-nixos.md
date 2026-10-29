@@ -142,6 +142,12 @@ cd ~/github/dotfiles-kun && git pull && ./rebuild.sh
 Every switch is a new generation; `sudo nixos-rebuild switch --rollback` undoes the last one.
 
 `home-linux.nix` installs Node from nixpkgs instead of nvm; `npm install -g` goes to `~/.npm-global`.
+Everything else follows the stable `nixos-26.05` input, except `claude-code`, which comes from `nixos-unstable` through an overlay in `flake.nix` because stable lags it by weeks.
+To pick up a newer claude-code (and stable security updates), refresh the lock, rebuild, and commit `flake.lock`:
+
+```sh
+nix flake update nixos nixpkgs-unstable && ./rebuild.sh
+```
 `programs.nix-ld` lets generic Linux binaries run, like uv's downloaded Pythons and npm packages that ship prebuilt executables.
 
 `pkgs/herdr.nix` pins herdr's static release binary, since herdr isn't in nixpkgs.
