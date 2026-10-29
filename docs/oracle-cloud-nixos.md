@@ -46,11 +46,26 @@ From this repo on the Mac. The flake only sees git-tracked files, so commit (or 
 nix run github:nix-community/nixos-anywhere/1.13.0 -- \
   --flake .#oci \
   --build-on remote \
+  --kexec https://github.com/nix-community/nixos-images/releases/download/nixos-26.05/nixos-kexec-installer-noninteractive-aarch64-linux.tar.gz \
   -i ~/.ssh/id_ed25519_oci \
   --target-host ubuntu@<public-ip>
 ```
 
 It uses `sudo` on the Ubuntu side, kexecs, formats, installs, and reboots. Expect a few minutes.
+
+Keep the `--kexec` pin. nixos-anywhere 1.13.0's default installer is a 2024 build whose kexec hung on Ubuntu 26.04's 7.0 kernel:
+Ubuntu remounted its root read-only, never switched, and stopped answering SSH. The disk is only touched after the installer comes back over SSH, so a hang like that just needs a force reboot to get Ubuntu back:
+
+```sh
+nix run nixpkgs#oci-cli -- compute instance action --action RESET --instance-id <instance-ocid>
+```
+
+To see the serial console without a console connection, capture it with the CLI:
+
+```sh
+nix run nixpkgs#oci-cli -- compute console-history capture --instance-id <instance-ocid> --wait-for-state SUCCEEDED
+nix run nixpkgs#oci-cli -- compute console-history get-content --instance-console-history-id <history-ocid> --length 10000000 --file console.txt
+```
 
 The host key changes with the new OS, so drop the old one and log in as yourself:
 
@@ -90,7 +105,21 @@ ssh hansen@oci
 ```
 
 With `--ssh`, Tailscale handles auth by tailnet identity, no key file needed.
-The default tailnet policy allows SSH from your own devices with a periodic browser `check`; edit the `ssh` section of the policy to change that.
+It only works if the tailnet policy has an `ssh` rule; without one the connection fails with "tailnet policy does not permit you to SSH to this node".
+In the admin console's Access controls, add:
+
+```json
+"ssh": [
+  {
+    "action": "accept",
+    "src":    ["autogroup:member"],
+    "dst":    ["autogroup:self"],
+    "users":  ["autogroup:nonroot", "root"]
+  }
+]
+```
+
+`accept` lets your own devices in without prompting. `check` adds a browser re-auth every 12 hours, which breaks unattended SSH such as agents and scripts.
 
 ## 5. Close the public SSH port
 
@@ -99,7 +128,8 @@ Once Tailscale SSH works, edit the subnet's security list in the OCI console (Ne
 - Remove the ingress rule for TCP 22. With no ingress rules left, the public IP accepts nothing; Tailscale still connects through outbound NAT traversal.
 - Optionally add ingress UDP 41641 from `0.0.0.0/0`. It lets Tailscale peers connect directly instead of through a DERP relay; the NixOS firewall already allows it.
 
-sshd keeps running, so `ssh -i ~/.ssh/id_ed25519_oci hansen@oci` still works over the tailnet as a fallback if Tailscale SSH misbehaves.
+Only do this after `ssh hansen@oci` works. With `--ssh`, Tailscale answers port 22 on the tailnet address itself, so key-based SSH is not a fallback over the tailnet.
+If Tailscale SSH breaks later, re-add the TCP 22 rule for your home IP and use `ssh -i ~/.ssh/id_ed25519_oci hansen@<public-ip>`; sshd keeps running for exactly that.
 
 ## Daily use
 

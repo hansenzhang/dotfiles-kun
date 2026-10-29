@@ -70,7 +70,9 @@ in
     enable = true;
     settings = {
       add_newline = false;
-      format = "$directory$git_branch$git_status$cmd_duration$line_break$character";
+      format = "$hostname$directory$git_branch$git_status$cmd_duration$line_break$character";
+      # Only shown over SSH (starship's default ssh_only), so a remote shell never passes for the Mac.
+      hostname.format = "[$hostname]($style) ";
       character = {
         success_symbol = "[❯](purple)";
         error_symbol = "[❯](red)";
