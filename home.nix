@@ -42,6 +42,20 @@ in
     };
   };
 
+  # Agent CLIs that aren't in nixpkgs, in ~/.npm-global on both platforms. Uses Nix's Node so the
+  # Mac's nvm version doesn't matter. Installs only the missing ones; upgrade with
+  # `npm update -g --prefix ~/.npm-global`.
+  home.activation.npmGlobals = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    export PATH="${pkgs.nodejs_26}/bin:$PATH"
+    missing=""
+    for p in gh-axi lavish-axi tasks-axi quota-axi chrome-devtools-axi; do
+      [ -d "$HOME/.npm-global/lib/node_modules/$p" ] || missing="$missing $p"
+    done
+    if [ -n "$missing" ]; then
+      run npm install -g --prefix "$HOME/.npm-global" $missing
+    fi
+  '';
+
   # Ctrl-R history, Ctrl-T file path, Alt-C cd. fd makes the pickers skip .git and gitignored files.
   programs.fzf = {
     enable = true;

@@ -15,10 +15,13 @@
     gdal        # ogr2ogr
     tippecanoe
     claude-code # from nixos-unstable via the overlay in flake.nix
+    chromium    # headless browser for chrome-devtools-axi; Google Chrome has no aarch64 Linux build
   ];
   home.sessionVariables = {
     # The Nix store is read-only, so `npm install -g` needs a user prefix.
     NPM_CONFIG_PREFIX = "$HOME/.npm-global";
+    # chrome-devtools-axi looks for Google Chrome by default; point it at Nix's Chromium.
+    CHROME_DEVTOOLS_AXI_EXECUTABLE_PATH = "${pkgs.chromium}/bin/chromium";
   };
 
   # Global python/python3 shims in ~/.local/bin. Idempotent, so a no-op once installed.

@@ -41,6 +41,9 @@ in
       export NVM_DIR="$HOME/.nvm"
       [ -s /opt/homebrew/opt/nvm/nvm.sh ] && . /opt/homebrew/opt/nvm/nvm.sh
       [ -s /opt/homebrew/opt/nvm/etc/bash_completion.d/nvm ] && . /opt/homebrew/opt/nvm/etc/bash_completion.d/nvm
+      # Global npm CLIs from home.nix, after nvm so they win over copies in nvm's node versions.
+      # Not NPM_CONFIG_PREFIX: nvm refuses to run with an npm prefix set.
+      export PATH="$HOME/.npm-global/bin:$PATH"
     '';
     shellAliases.ll = "ls -alGh";  # BSD ls: -G is color
   };
