@@ -45,8 +45,10 @@ in
   # Agent CLIs that aren't in nixpkgs, in ~/.npm-global on both platforms. Uses Nix's Node so the
   # Mac's nvm version doesn't matter. Installs only the missing ones; upgrade with
   # `npm update -g --prefix ~/.npm-global`.
+  # `setup hooks` is idempotent and adds the SessionStart hooks for Claude, Codex, OpenCode and
+  # Copilot. Claude's land in the linked settings.json, which already carries them.
   home.activation.npmGlobals = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    export PATH="${pkgs.nodejs_26}/bin:$PATH"
+    export PATH="${pkgs.nodejs_26}/bin:$HOME/.npm-global/bin:$PATH"
     missing=""
     for p in gh-axi lavish-axi tasks-axi quota-axi chrome-devtools-axi; do
       [ -d "$HOME/.npm-global/lib/node_modules/$p" ] || missing="$missing $p"
@@ -54,6 +56,9 @@ in
     if [ -n "$missing" ]; then
       run npm install -g --prefix "$HOME/.npm-global" $missing
     fi
+    for p in gh-axi lavish-axi chrome-devtools-axi; do
+      run $p setup hooks > /dev/null
+    done
   '';
 
   # Ctrl-R history, Ctrl-T file path, Alt-C cd. fd makes the pickers skip .git and gitignored files.
