@@ -1,8 +1,15 @@
-{ config, lib, pkgs, user, ... }:
+{ config, lib, pkgs, user, inputs, ... }:
 
 # Shared by every machine. Platform-only bits live in home-darwin.nix and home-linux.nix.
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
+
+  # Agent skills by name. Mine live in home/skills and link out of the store so edits apply live;
+  # upstream ones come pinned from flake inputs.
+  skills = {
+    unslop = "${dotfiles}/home/skills/unslop";
+    writing-for-agents = "${inputs.mattpocock-skills}/skills/productivity/writing-for-agents";
+  };
 in
 
 {
@@ -118,12 +125,14 @@ in
   home.file.".pi/agent/settings.json".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.pi/agent/settings.json";
 
-  # Skills I wrote. Claude gets each one linked into ~/.claude/skills, which also holds its own
-  # synced skills; Codex and Pi read ~/.agents/skills.
-  home.file.".claude/skills/unslop".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/unslop";
-  home.file.".agents/skills".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills";
+  # Claude gets each skill linked into ~/.claude/skills, which also holds its own synced skills.
+  # Codex and Pi read ~/.agents/skills, one link to a folder holding them all.
+  imports = [{
+    home.file = lib.mapAttrs' (name: path: lib.nameValuePair ".claude/skills/${name}" {
+      source = config.lib.file.mkOutOfStoreSymlink path;
+    }) skills;
+  }];
+  home.file.".agents/skills".source = pkgs.linkFarm "agent-skills" skills;
 
   home.file.".claude/CLAUDE.md".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";

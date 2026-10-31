@@ -18,9 +18,12 @@
     # Declarative partitioning; nixos-anywhere uses it to format the server at install time.
     disko.url = "github:nix-community/disko/v1.13.0";
     disko.inputs.nixpkgs.follows = "nixos";
+    # Upstream agent skills; home.nix links the ones I use.
+    mattpocock-skills.url = "github:mattpocock/skills";
+    mattpocock-skills.flake = false;
   };
 
-  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixos, nixpkgs-unstable, disko }:
+  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixos, nixpkgs-unstable, disko, ... }:
     let
       # The one username line to change if this isn't your machine.
       # bootstrap.sh offers to rewrite this for you if your macOS username differs.
@@ -32,7 +35,7 @@
         home-manager.useUserPackages = true;
         # Move pre-existing files (e.g. a hand-written ~/.zshrc) to *.backup instead of failing the switch.
         home-manager.backupFileExtension = "backup";
-        home-manager.extraSpecialArgs = { inherit user; };
+        home-manager.extraSpecialArgs = { inherit user inputs; };
         home-manager.users.${user}.imports = [ ./home.nix platformHome ];
       };
     in
