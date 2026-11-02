@@ -20,7 +20,7 @@
 
   users.users.${user} = {
     isNormalUser = true;
-    extraGroups = [ "wheel" ];
+    extraGroups = [ "wheel" "docker" ];
     shell = pkgs.zsh;
     openssh.authorizedKeys.keyFiles = [ ./authorized_keys ];
   };
@@ -54,6 +54,9 @@
   # Generic Linux binaries (uv's Pythons, npm packages with prebuilt binaries) expect a normal
   # dynamic loader; nix-ld provides one.
   programs.nix-ld.enable = true;
+
+  # potential-chainsaw's builder runs gVisor (runsc) inside a privileged container.
+  virtualisation.docker.enable = true;
 
   environment.systemPackages = with pkgs; [ git vim ];
 
