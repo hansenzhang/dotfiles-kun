@@ -68,6 +68,23 @@ in
     done
   '';
 
+  # treehouse and no-mistakes (firstmate's worktree and validation tools) ship only as curl
+  # installers. Both link into ~/.local/bin when it's on PATH, else /usr/local/bin via sudo, so
+  # create it and put it on PATH first. The system dirs are needed because no-mistakes shells out
+  # to launchctl (/bin) to start its daemon, and activation's PATH lacks them. They go last so BSD tools don't shadow the Nix coreutils (the
+  # script is one shell, so this PATH leaks into later steps like linkGeneration). Installs only the
+  # missing ones; each upgrades itself with `treehouse update` / `no-mistakes update`.
+  home.activation.curlInstalls = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    export PATH="${lib.makeBinPath [ pkgs.curl pkgs.gnutar pkgs.gzip ]}:$HOME/.local/bin:$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
+    mkdir -p "$HOME/.local/bin"
+    if [ ! -x "$HOME/.local/bin/treehouse" ]; then
+      run sh -c 'curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh'
+    fi
+    if [ ! -x "$HOME/.no-mistakes/bin/no-mistakes" ]; then
+      run sh -c 'curl -fsSL https://raw.githubusercontent.com/kunchenguid/no-mistakes/main/docs/install.sh | sh'
+    fi
+  '';
+
   # Ctrl-R history, Ctrl-T file path, Alt-C cd. fd makes the pickers skip .git and gitignored files.
   programs.fzf = {
     enable = true;

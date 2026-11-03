@@ -1,5 +1,12 @@
 { user, ... }:
 
+let
+  trackpadSwipes = {
+    TrackpadThreeFingerHorizSwipeGesture = 1;  # swipe between pages
+    TrackpadFourFingerHorizSwipeGesture = 2;   # swipe between full-screen apps (workspaces)
+  };
+in
+
 {
   # Determinate already manages the Nix daemon, so nix-darwin shouldn't.
   nix.enable = false;
@@ -24,6 +31,21 @@
     finder.FXPreferredViewStyle = "Nlsv";  # list view by default
     finder.CreateDesktop = false;          # clean desktop
     trackpad.Clicking = true;              # tap to click
+    # 4 fingers swap workspaces, 3 fingers go back/forward. nix-darwin has no options for these;
+    # both domains because built-in and Bluetooth trackpads read different ones.
+    CustomUserPreferences = {
+      "com.apple.AppleMultitouchTrackpad" = trackpadSwipes;
+      "com.apple.driver.AppleBluetoothMultitouch.trackpad" = trackpadSwipes;
+    };
+  };
+  # ISO section/plus-minus key (0x64) -> backtick/tilde (0x35). hidutil mappings don't survive
+  # a reboot, so re-apply at login.
+  launchd.user.agents.remap-section-key.serviceConfig = {
+    ProgramArguments = [
+      "/usr/bin/hidutil" "property" "--set"
+      ''{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0x700000064,"HIDKeyboardModifierMappingDst":0x700000035}]}''
+    ];
+    RunAtLoad = true;
   };
   nix-homebrew = {
     enable = true;

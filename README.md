@@ -154,11 +154,7 @@ You only run `./rebuild.sh` when you change something that isn't just a symlinke
 ## Claude Code session hook
 
 `home/.claude/settings.json` runs `gh-axi` on every session start, so agents begin with the repo's open issues and PRs in context.
-This config doesn't install `gh-axi`, so install it yourself or the hook will fail at each session start:
-
-```sh
-npm install -g gh-axi
-```
+`home.nix` installs `gh-axi` and the other agent CLIs into `~/.npm-global` on rebuild, and `treehouse` and `no-mistakes` into `~/.local/bin`.
 
 ## Optional Pi configuration
 

@@ -29,6 +29,33 @@ in
     fi
   '';
 
+  # Node 26 as nvm's default, so new shells get it. nvm is a shell function from Homebrew, hence
+  # the subshell. Activation's PATH has no curl, which nvm needs, so add the system dirs.
+  # Skipped once v26 is installed and the default (checked separately, so a half-done run retries);
+  # `nvm install 26` again picks up newer 26.x releases.
+  home.activation.nvmNode = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    if [ -s /opt/homebrew/opt/nvm/nvm.sh ] \
+       && { [ "$(cat "$HOME/.nvm/alias/default" 2>/dev/null)" != 26 ] \
+            || [ -z "$(ls -d "$HOME"/.nvm/versions/node/v26.* 2>/dev/null)" ]; }; then
+      mkdir -p "$HOME/.nvm"  # nvm won't create its own dir
+      run env NVM_DIR="$HOME/.nvm" PATH="/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:$PATH" bash -c '. /opt/homebrew/opt/nvm/nvm.sh && nvm install 26 && nvm alias default 26'
+    fi
+  '';
+
+  # herdr's SessionStart hook in the linked settings.json runs ~/.claude/hooks/herdr-agent-state.sh,
+  # which only `herdr integration install claude` writes. That command also appends a second,
+  # absolute-path hook to settings.json (and the file is a repo symlink), so run it against a
+  # throwaway HOME and copy out just the script.
+  home.activation.herdrClaudeHook = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    if [ -x /opt/homebrew/bin/herdr ] && [ ! -f "$HOME/.claude/hooks/herdr-agent-state.sh" ]; then
+      tmp=$(mktemp -d)
+      mkdir "$tmp/.claude"  # the installer refuses to run without one
+      HOME="$tmp" /opt/homebrew/bin/herdr integration install claude > /dev/null
+      run install -Dm755 "$tmp/.claude/hooks/herdr-agent-state.sh" "$HOME/.claude/hooks/herdr-agent-state.sh"
+      rm -rf "$tmp"
+    fi
+  '';
+
   programs.zsh = {
     initContent = ''
       # Set here, not in sessionPath, so it lands after /etc/zshrc runs `brew shellenv`

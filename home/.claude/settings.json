@@ -1,6 +1,6 @@
 {
   "cleanupPeriodDays": 3650,
-  "model": "opus",
+  "model": "sonnet",
   "hooks": {
     "SessionStart": [
       {
