@@ -5,6 +5,7 @@
 - Never manually modify CHANGELOG.md files or any files that are marked as auto-generated
 - When making technical decisions, do not give much weight to development cost.
   Instead, prefer quality, simplicity, robustness, scalability, and long term maintainability.
+- Prefer the simplest change that works. Add config keys, generic mechanisms and abstractions only when asked, and mention a cleaner design as a follow-up.
 - For one-off or infrequent operational work, start with the simplest direct end-to-end path. Do not build wrappers, control planes, policy layers, custom verifiers, or automation unless the direct path exposes a concrete blocker or repeated need that justifies the added machinery.
 - When doing bug fixes, always start with reproducing the bug in an E2E setting as closely aligned with how an end user would experience it as possible.
   This makes sure you find the real problem so your fix will actually solve it.
@@ -13,16 +14,31 @@
 - Apply that same high standard to engineering excellence: lint, test failures, and test flakiness.
   If you see one, even if it is not caused by what you are working on right now, still get it fixed.
 - Use `rg` (ripgrep) instead of `grep` for searching file contents.
+- Read a file with the Read tool, then change it with Edit/Write. Shell edits (`sed -i`, Python replaces, heredocs) corrupt BOMs and line endings.
 - Before using "dynamic workflows", "ultra code" or any harness feature that immediately spawns a large swarm of subagents, always explain the tradeoffs and ask the user for explicit approval.
+
+## Code is the source of truth
+
+- The code and its tests are the only record of what the system does. Prose about behavior drifts, and then two sources of truth disagree.
+- Put behavior into executable form: clear names, types, file layout, interfaces separate from implementations, tests that state behavior. When code is hard to follow, refactor it before explaining it in prose.
+- Durable docs record what code cannot say:
+  - ADRs (`docs/adr/NNNN-title.md`, dated) hold the decision, the alternatives considered, and why.
+  - A glossary (`docs/glossary.md` or a README section) defines domain terms.
+  - A map in the repo's AGENTS.md lists the main directories and entry points in a few lines.
+- A spec is transient. Write one to settle what and why before building (a plan-mode plan, an issue body or a draft file). Cut it into briefs. When the work ships, delete or close the spec. What survives is the code, its tests, an ADR for each decision and a glossary entry for each new term.
+- Decide structure (boundaries, interfaces, dependencies) in the spec before coding, then encode it in directory layout and interfaces. Record non-obvious choices as ADRs.
+- Start bug fixes and well-specified logic with a failing test, and watch it go red for the right reason. For exploratory work, write tests with the code, in the same commit.
+- Every `.md` in a repo is an ADR, a glossary, a map, or a spec or brief still in flight. Anything else is a candidate for deletion.
+- When you change code that a doc describes, fix or delete the doc in the same commit. If doc and code disagree, trust the code. Delete the doc when it only restates code.
 
 ## Working rules
 
-- Architecture before code. For a new module, write or update its design note first. Keep one `.md` per module next to the code (or under `docs/modules/`) and update it in the same commit.
-- Work from briefs. When a prompt points at a brief (plans/NN, tasks/NNN, a design-doc phase, a GitHub issue), its acceptance criteria are the definition of done. When finished, append an "As built (date)" note to the brief: what changed, commits, measurements, open follow-ups.
-- Verification. Say which acceptance checks you ran and which need me (device, production, my real data). Never report a check as done that you could not run.
+- Work from briefs. A brief is one session's work order, cut from a spec: the goal and acceptance criteria, which are the definition of done. Prefer a GitHub issue. Without one, use a `plans/NN` file and delete it when done. When finished, post what changed, commits, measurements and open follow-ups as an issue or PR comment or in the commit body. A decision that outlives the task becomes an ADR.
+- One brief per session. When its deliverable is committed, stop and hand off through the issue.
+- Verification. Say which acceptance checks you ran and which need me (device, production, my real data). Report only checks you ran. When a page or flow is unreachable (login, VPN), call it unverified and list what to check.
 - Parallel sessions. Other sessions may be working in this checkout. Stage and commit only the files you changed (`git add <paths>`, never `-A`), or work in a worktree.
 - Commits. Follow the repo's CLAUDE.md or AGENTS.md commit and push policy. If it has none, commit only when asked, and write a body that says why.
-- Decisions go in the repo (ADR or design doc, dated), not in memory. Memory is for facts about me and this machine.
+- Decisions go in the repo (ADR, dated), not in memory. Memory is for facts about me and this machine.
 - In someone else's repo, keep notes outside it, and check `git log` before stating what the repo contains.
 
 ## Maintaining this file
