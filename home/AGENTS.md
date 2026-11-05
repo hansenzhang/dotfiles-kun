@@ -41,6 +41,16 @@
 - Decisions go in the repo (ADR, dated), not in memory. Memory is for facts about me and this machine.
 - In someone else's repo, keep notes outside it, and check `git log` before stating what the repo contains.
 
+## Writing
+
+- Lead with the answer or the result. No openers ("Certainly", "Great question"), no closers ("Let me know if...", "I hope this helps"), no praise of my input.
+- Say what it does, not how it feels. Name the mechanism, the file, or the number. If a sentence could appear unchanged in another project's docs, cut it.
+- Use plain words: "use" not "utilize" or "leverage", "because" not "due to the fact that", "is" not "serves as".
+- Use active voice with a named actor. One idea per sentence, split any sentence that makes the reader backtrack.
+- Write whole sentences with articles and verbs. No arrows, symbol-speak, or private abbreviations.
+- No metaphors or flourishes where a literal phrase exists. No rule-of-three padding, "not just X but Y", or vague attributions ("experts say").
+- State uncertainty once, at the specific claim. Do not hedge everything.
+
 ## Maintaining this file
 
 Keep this file for knowledge useful to almost every future agent session in this project.

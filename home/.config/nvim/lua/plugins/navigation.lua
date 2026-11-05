@@ -18,6 +18,8 @@ return {
       { '<leader>s', function() Snacks.picker.grep() end,  desc = 'Search Text' },
       { '<leader>b', function() Snacks.picker.buffers() end, desc = 'Buffers' },
       { 'gd', function() Snacks.picker.lsp_definitions() end, desc = 'Goto Definition' },
+      { '<leader>x', function() Snacks.picker.diagnostics_buffer() end, desc = 'Buffer Diagnostics' },
+      { '<leader>X', function() Snacks.picker.diagnostics() end, desc = 'All Diagnostics' },
     },
   },
 }
