@@ -85,6 +85,27 @@ in
     fi
   '';
 
+  # herdr plugins ("<plugin id> <install source>"). Installs only the missing ones, unpinned;
+  # upgrade with `herdr plugin update`. Their keys live in home/.config/herdr/config.toml.
+  # herdr is Homebrew's on the Mac, so add its bin; heeler's build runs `npm ci`, so add Node.
+  home.activation.herdrPlugins = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    export PATH="${pkgs.nodejs_26}/bin:$PATH:/opt/homebrew/bin"
+    if command -v herdr > /dev/null; then
+      installed=$(herdr plugin list)
+      for spec in \
+        "usagebar senna-lang/herdr-agent-usage" \
+        "heeler ZingerLittleBee/Heeler/plugin" \
+        "chmarax.herdr-nvim ChmaraX/herdr-nvim" \
+        "chmarax.gitview ChmaraX/herdr-gitview"; do
+        set -- $spec
+        case "$installed" in
+          *"- $1 ("*) ;;
+          *) run herdr plugin install --yes "$2" ;;
+        esac
+      done
+    fi
+  '';
+
   # Ctrl-R history, Ctrl-T file path, Alt-C cd. fd makes the pickers skip .git and gitignored files.
   programs.fzf = {
     enable = true;

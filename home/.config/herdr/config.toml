@@ -41,6 +41,30 @@ type = "plugin_action"
 command = "usagebar.refresh"
 description = "Agent Usage: refresh sidebar meters"
 
+[[keys.command]]
+key = "ctrl+shift+b"
+type = "plugin_action"
+command = "chmarax.herdr-nvim.toggle"
+description = "nvim sidebar"
+
+[[keys.command]]
+key = "ctrl+shift+o"
+type = "plugin_action"
+command = "chmarax.herdr-nvim.pick-file"
+description = "open file from agent output"
+
+[[keys.command]]
+key = "ctrl+shift+d"
+type = "plugin_action"
+command = "chmarax.gitview.toggle"
+description = "git view sidebar"
+
+[[keys.command]]
+key = "ctrl+shift+y"
+type = "plugin_action"
+command = "chmarax.gitview.toggle-tab"
+description = "git view tab"
+
 [theme]
 name = "catppuccin"
 auto_switch = false
