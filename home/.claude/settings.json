@@ -1,6 +1,7 @@
 {
   "cleanupPeriodDays": 3650,
   "model": "sonnet",
+  "attribution": {"commit": "", "pr":""},
   "hooks": {
     "SessionStart": [
       {
