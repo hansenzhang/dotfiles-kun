@@ -21,6 +21,26 @@ status_indicators = "symbols"
 [ui.toast]
 delivery = "terminal"
 
+[ui.sidebar.agents]
+row_gap = 0
+rows = [
+  ["state_icon", "$title"],
+  ["agent", "$limit"],
+  ["$context"],
+]
+
+[[keys.command]]
+key = "ctrl+shift+u"
+type = "plugin_action"
+command = "usagebar.open-limits"
+description = "Agent Usage: open limits pane"
+
+[[keys.command]]
+key = "ctrl+shift+m"
+type = "plugin_action"
+command = "usagebar.refresh"
+description = "Agent Usage: refresh sidebar meters"
+
 [theme]
 name = "catppuccin"
 auto_switch = false
