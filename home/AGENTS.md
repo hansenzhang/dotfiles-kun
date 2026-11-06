@@ -1,5 +1,6 @@
 # global agent instructions
 
+- Be extremely concise. Sacrifice grammer for the sake of concision
 - Never use the em dash "—". Use plain dash "-" instead
 - When writing commit messages, NEVER auto-add your agent name as co-author
 - Never manually modify CHANGELOG.md files or any files that are marked as auto-generated
@@ -36,8 +37,7 @@
 - Work from briefs. A brief is one session's work order, cut from a spec: the goal and acceptance criteria, which are the definition of done. Prefer a GitHub issue. Without one, use a `plans/NN` file and delete it when done. When finished, post what changed, commits, measurements and open follow-ups as an issue or PR comment or in the commit body. A decision that outlives the task becomes an ADR.
 - One brief per session. When its deliverable is committed, stop and hand off through the issue.
 - Verification. Say which acceptance checks you ran and which need me (device, production, my real data). Report only checks you ran. When a page or flow is unreachable (login, VPN), call it unverified and list what to check.
-- Parallel sessions. Other sessions may be working in this checkout. Stage and commit only the files you changed (`git add <paths>`, never `-A`), or work in a worktree.
-- Commits. Follow the repo's CLAUDE.md or AGENTS.md commit and push policy. If it has none, commit only when asked, and write a body that says why.
+- Commits. Follow the repo's CLAUDE.md, AGENTS.md, or CONTRIBUTING.md commit and push policy. If it has none, commit only when asked, and write a body that says why.
 - Decisions go in the repo (ADR, dated), not in memory. Memory is for facts about me and this machine.
 - In someone else's repo, keep notes outside it, and check `git log` before stating what the repo contains.
 
