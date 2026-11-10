@@ -11,6 +11,7 @@ new_tab   = "prefix+c"
 close_tab = "prefix+ampersand"
 workspace_picker = "prefix+w"
 goto             = "prefix+g"
+edit_scrollback = "prefix+shift+e"  # frees prefix+e for the nvim sidebar
 copy_mode  = "prefix+y"  # herdr's copy-mode entry key; copy-mode's own internal keys (v/space select, y/Enter copy, q/Esc cancel) aren't configurable
 
 [ui]
@@ -29,38 +30,40 @@ rows = [
   ["$context"],
 ]
 
+# Plugin keys sit behind the prefix: WezTerm takes ctrl+shift+u/m itself, and without the kitty
+# keyboard protocol other ctrl+shift+letter chords arrive as plain ctrl+letter.
 [[keys.command]]
-key = "ctrl+shift+u"
+key = "prefix+u"
 type = "plugin_action"
 command = "usagebar.open-limits"
 description = "Agent Usage: open limits pane"
 
 [[keys.command]]
-key = "ctrl+shift+m"
+key = "prefix+shift+u"
 type = "plugin_action"
 command = "usagebar.refresh"
 description = "Agent Usage: refresh sidebar meters"
 
 [[keys.command]]
-key = "ctrl+shift+b"
+key = "prefix+e"
 type = "plugin_action"
 command = "chmarax.herdr-nvim.toggle"
 description = "nvim sidebar"
 
 [[keys.command]]
-key = "ctrl+shift+o"
+key = "prefix+f"
 type = "plugin_action"
 command = "chmarax.herdr-nvim.pick-file"
 description = "open file from agent output"
 
 [[keys.command]]
-key = "ctrl+shift+d"
+key = "prefix+d"
 type = "plugin_action"
 command = "chmarax.gitview.toggle"
 description = "git view sidebar"
 
 [[keys.command]]
-key = "ctrl+shift+y"
+key = "prefix+ctrl+d"
 type = "plugin_action"
 command = "chmarax.gitview.toggle-tab"
 description = "git view tab"
