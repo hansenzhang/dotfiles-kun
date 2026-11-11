@@ -23,6 +23,8 @@
     extraGroups = [ "wheel" "docker" ];
     shell = pkgs.zsh;
     openssh.authorizedKeys.keyFiles = [ ./authorized_keys ];
+    # Starts the user's systemd services (Syncthing, claude-sessions-sync) at boot, not at login.
+    linger = true;
   };
   # Key-only login and no password set, so sudo can't ask for one.
   security.sudo.wheelNeedsPassword = false;
@@ -49,7 +51,8 @@
     openFirewall = true;
   };
   networking.firewall.allowedTCPPorts = [ 22 ];
-  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 2222 ];
+  # 22000 is Syncthing (home.nix), which syncs only over the tailnet.
+  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 2222 22000 ];
 
   # Generic Linux binaries (uv's Pythons, npm packages with prebuilt binaries) expect a normal
   # dynamic loader; nix-ld provides one.

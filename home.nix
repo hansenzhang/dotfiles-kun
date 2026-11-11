@@ -8,7 +8,15 @@ let
   # upstream ones come pinned from flake inputs.
   skills = {
     unslop = "${dotfiles}/home/skills/unslop";
+    search-sessions = "${dotfiles}/home/skills/search-sessions";
     writing-for-agents = "${inputs.mattpocock-skills}/skills/productivity/writing-for-agents";
+  };
+
+  # Runs every 15 minutes: a systemd timer on Linux, a launchd agent on the Mac.
+  claudeSessionsSync = pkgs.writeShellApplication {
+    name = "claude-sessions-sync";
+    runtimeInputs = with pkgs; [ rsync coreutils hostname ];
+    text = builtins.readFile ./home/claude-sessions-sync.sh;
   };
 in
 
@@ -22,7 +30,48 @@ in
     jq        # json on the command line
     lazygit
     neovim
+    claudeSessionsSync
   ];
+
+  # Shares ~/claude-sessions (every machine's Claude sessions, see search-sessions skill) over the
+  # tailnet only: peers dial each other's MagicDNS names, with discovery and relays off. Device IDs
+  # are public key hashes, not secrets; get one with `syncthing device-id` after the first switch.
+  services.syncthing = {
+    enable = true;
+    settings = {
+      options = {
+        listenAddresses = [ "tcp://0.0.0.0:22000" ];
+        globalAnnounceEnabled = false;
+        localAnnounceEnabled = false;
+        relaysEnabled = false;
+        natEnabled = false;
+        urAccepted = -1;
+      };
+      devices = {
+        oci = { id = "XSXZYUW-M5WYIFU-VZGKOTE-LHFRZQK-CVAOMFP-AYPL4VD-MBET37K-S4W6GQ3"; addresses = [ "tcp://oci:22000" ]; };
+      };
+      folders.claude-sessions = {
+        path = "~/claude-sessions";
+        devices = [ "oci" ];
+      };
+    };
+  };
+  systemd.user.services.claude-sessions-sync = lib.mkIf pkgs.stdenv.isLinux {
+    Unit.Description = "Copy Claude sessions into ~/claude-sessions";
+    Service = { Type = "oneshot"; ExecStart = lib.getExe claudeSessionsSync; };
+  };
+  systemd.user.timers.claude-sessions-sync = lib.mkIf pkgs.stdenv.isLinux {
+    Timer = { OnCalendar = "*:0/15"; Persistent = true; };
+    Install.WantedBy = [ "timers.target" ];
+  };
+  launchd.agents.claude-sessions-sync = lib.mkIf pkgs.stdenv.isDarwin {
+    enable = true;
+    config = {
+      ProgramArguments = [ (lib.getExe claudeSessionsSync) ];
+      StartInterval = 900;
+      RunAtLoad = true;
+    };
+  };
   home.sessionVariables = {
     EDITOR = "nvim";
     # Projects get uv-downloaded Pythons, never a system or package-manager one.
@@ -68,7 +117,7 @@ in
     done
   '';
 
-  # treehouse and no-mistakes (firstmate's worktree and validation tools) ship only as curl
+  # treehouse and no-mistakes (worktree and validation tools) ship only as curl
   # installers. Both link into ~/.local/bin when it's on PATH, else /usr/local/bin via sudo, so
   # create it and put it on PATH first. The system dirs are needed because no-mistakes shells out
   # to launchctl (/bin) to start its daemon, and activation's PATH lacks them. They go last so BSD tools don't shadow the Nix coreutils (the
@@ -87,9 +136,12 @@ in
 
   # herdr plugins ("<plugin id> <install source>"). Installs only the missing ones, unpinned;
   # upgrade with `herdr plugin update`. Their keys live in home/.config/herdr/config.toml.
-  # herdr is Homebrew's on the Mac, so add its bin; heeler's build runs `npm ci`, so add Node.
+  # herdr is Homebrew's on the Mac and in the per-user profile on NixOS, whose home-manager
+  # service PATH has neither, so add both. Installs clone with git and run bash build scripts;
+  # heeler's runs `npm ci`; gitview has no aarch64-linux binary, so it runs `cargo build`
+  # and its onig crate needs a C compiler.
   home.activation.herdrPlugins = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    export PATH="${pkgs.nodejs_26}/bin:$PATH:/opt/homebrew/bin"
+    export PATH="${lib.makeBinPath (with pkgs; [ nodejs_26 git bash curl gnutar gzip cargo rustc gcc ])}:$PATH:/etc/profiles/per-user/$USER/bin:/opt/homebrew/bin"
     if command -v herdr > /dev/null; then
       installed=$(herdr plugin list)
       for spec in \

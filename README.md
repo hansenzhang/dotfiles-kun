@@ -156,6 +156,16 @@ You only run `./rebuild.sh` when you change something that isn't just a symlinke
 `home/.claude/settings.json` runs `gh-axi` on every session start, so agents begin with the repo's open issues and PRs in context.
 `home.nix` installs `gh-axi` and the other agent CLIs into `~/.npm-global` on rebuild, and `treehouse` and `no-mistakes` into `~/.local/bin`.
 
+## Claude session archive
+
+Every 15 minutes, `claude-sessions-sync` copies `~/.claude` transcripts into `~/claude-sessions/<host>/`, and Syncthing shares that folder with every machine over the tailnet.
+Agents search it with the `search-sessions` skill.
+To add a machine:
+
+1. Run `./rebuild.sh` on it, then `syncthing device-id` to print its ID.
+2. Add it to `services.syncthing.settings.devices` in `home.nix`, with its tailnet name as the address, and to the folder's `devices` list.
+3. Commit, pull on every machine, and run `./rebuild.sh` on each.
+
 ## Optional Pi configuration
 
 Pi is an opt-in CLI, not a dependency this repository vendors. Install it from its owner with the [official Pi instructions](https://pi.dev), for example:
