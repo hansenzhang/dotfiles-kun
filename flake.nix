@@ -6,7 +6,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-26.05-darwin";
     # The darwin branch above only carries Mac binaries; NixOS hosts build from this one.
     nixos.url = "github:NixOS/nixpkgs/nixos-26.05";
-    # Stable lags fast-moving tools by weeks; oci takes only claude-code from here.
+    # Stable lags fast-moving tools by weeks; NixOS hosts take only claude-code from here.
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     # Use `github:nix-darwin/nix-darwin/nix-darwin-26.05` to use Nixpkgs 26.05.
     nix-darwin.url = "github:nix-darwin/nix-darwin/nix-darwin-26.05";
@@ -21,9 +21,12 @@
     # Upstream agent skills; home.nix links the ones I use.
     mattpocock-skills.url = "github:mattpocock/skills";
     mattpocock-skills.flake = false;
+    # Lightweight VMs (Firecracker, cloud-hypervisor, qemu) as NixOS modules; desktop runs the host side.
+    microvm.url = "github:microvm-nix/microvm.nix";
+    microvm.inputs.nixpkgs.follows = "nixos";
   };
 
-  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixos, nixpkgs-unstable, disko, ... }:
+  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixos, nixpkgs-unstable, disko, microvm, ... }:
     let
       # The one username line to change if this isn't your machine.
       # bootstrap.sh offers to rewrite this for you if your macOS username differs.
@@ -37,6 +40,18 @@
         home-manager.backupFileExtension = "backup";
         home-manager.extraSpecialArgs = { inherit user inputs; };
         home-manager.users.${user}.imports = [ ./home.nix platformHome ];
+      };
+
+      # Stable lags fast-moving tools by weeks; NixOS hosts take only claude-code from unstable.
+      claudeCodeFromUnstable = {
+        nixpkgs.overlays = [
+          (final: prev: {
+            claude-code = (import nixpkgs-unstable {
+              system = prev.stdenv.hostPlatform.system;
+              config.allowUnfree = true;
+            }).claude-code;
+          })
+        ];
       };
     in
     {
@@ -58,16 +73,19 @@
           ./hosts/oci/configuration.nix
           ./hosts/oci/hardware.nix
           ./hosts/oci/disk.nix
-          {
-            nixpkgs.overlays = [
-              (final: prev: {
-                claude-code = (import nixpkgs-unstable {
-                  system = prev.stdenv.hostPlatform.system;
-                  config.allowUnfree = true;
-                }).claude-code;
-              })
-            ];
-          }
+          claudeCodeFromUnstable
+          home-manager.nixosModules.home-manager
+          (homeManager ./home-linux.nix)
+        ];
+      };
+
+      # Ryzen desktop dual-booting Windows 11. Install: docs/desktop-nixos.md.
+      nixosConfigurations."desktop" = nixos.lib.nixosSystem {
+        specialArgs = { inherit user; };
+        modules = [
+          microvm.nixosModules.host
+          ./hosts/desktop/configuration.nix
+          claudeCodeFromUnstable
           home-manager.nixosModules.home-manager
           (homeManager ./home-linux.nix)
         ];
