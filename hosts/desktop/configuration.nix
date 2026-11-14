@@ -72,7 +72,11 @@
   programs.steam.enable = true;
   programs.firefox.enable = true;
 
-  # Join once with `sudo tailscale up --ssh`. SSH is reachable over the tailnet only.
+  # Always-on host reached over SSH: never suspend or hibernate, even when Plasma's idle timer asks.
+  systemd.targets = lib.genAttrs [ "sleep" "suspend" "hibernate" "hybrid-sleep" "suspend-then-hibernate" ]
+    (_: { enable = false; });
+
+  # Join once with `sudo tailscale up` (no --ssh: OpenSSH serves port 22). SSH is reachable over the tailnet only.
   services.tailscale = {
     enable = true;
     openFirewall = true;
