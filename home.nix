@@ -138,10 +138,11 @@ in
   # upgrade with `herdr plugin update`. Their keys live in home/.config/herdr/config.toml.
   # herdr is Homebrew's on the Mac and in the per-user profile on NixOS, whose home-manager
   # service PATH has neither, so add both. Installs clone with git and run bash build scripts;
-  # heeler's runs `npm ci`; gitview has no aarch64-linux binary, so it runs `cargo build`
-  # and its onig crate needs a C compiler.
+  # usagebar's uses awk; heeler's runs `npm ci`; gitview checks its x86_64 download with shasum
+  # (perl) and has no aarch64-linux binary, so there it runs `cargo build`, whose onig crate
+  # needs a C compiler.
   home.activation.herdrPlugins = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    export PATH="${lib.makeBinPath (with pkgs; [ nodejs_26 git bash curl gnutar gzip cargo rustc gcc ])}:$PATH:/etc/profiles/per-user/$USER/bin:/opt/homebrew/bin"
+    export PATH="${lib.makeBinPath (with pkgs; [ nodejs_26 git bash curl gnutar gzip gawk perl cargo rustc gcc ])}:$PATH:/etc/profiles/per-user/$USER/bin:/opt/homebrew/bin"
     if command -v herdr > /dev/null; then
       installed=$(herdr plugin list)
       for spec in \

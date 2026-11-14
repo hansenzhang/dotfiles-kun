@@ -48,6 +48,18 @@
     wayland.enable = true;
   };
   systemd.defaultUnit = lib.mkForce "multi-user.target";
+  # With a display manager enabled, NixOS keeps getty.target from starting tty1's login, so
+  # boot would end on a blank tty1. Start it at boot unless the GUI already holds tty1.
+  systemd.services.tty1-login = {
+    wantedBy = [ "multi-user.target" ];
+    after = [ "getty.target" ];
+    restartIfChanged = false;
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = "systemctl is-active -q display-manager || systemctl --no-block start autovt@tty1.service";
+  };
   services.pipewire = {
     enable = true;
     alsa.enable = true;
@@ -89,7 +101,7 @@
       text = ''
         case "''${1:-on}" in
           on) exec sudo systemctl start display-manager ;;
-          off) exec sudo systemctl stop display-manager ;;
+          off) sudo systemctl stop display-manager && exec sudo systemctl start autovt@tty1.service ;;
           *) echo "usage: gui [on|off]" >&2; exit 1 ;;
         esac
       '';
