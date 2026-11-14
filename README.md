@@ -13,8 +13,12 @@ Watch the walkthrough: https://youtu.be/5N-okeDdIuI
 My personal Mac setup, managed with nix-darwin and home-manager.
 One repo, one command, and a fresh Mac ends up configured the same way every time.
 
-The same flake also defines `oci`, a headless NixOS server on an Oracle Cloud Ampere A1 instance that shares the Mac's shell, editor, and agent configs.
-Installing it is a separate path, covered in [docs/oracle-cloud-nixos.md](docs/oracle-cloud-nixos.md); everything else in this README is about the Mac.
+The same flake also defines two NixOS machines that share the Mac's shell, editor, and agent configs:
+
+- `oci`, a headless server on an Oracle Cloud Ampere A1 instance. Install: [docs/oracle-cloud-nixos.md](docs/oracle-cloud-nixos.md).
+- `desktop`, a Ryzen desktop dual-booting Windows 11, with NVIDIA drivers and a microvm.nix host. Install: [docs/desktop-nixos.md](docs/desktop-nixos.md).
+
+Everything else in this README is about the Mac.
 
 ## Contributing / Using This Repo
 
@@ -135,13 +139,14 @@ If you don't use it, just remove it from `brews` in your copy.
 ## Repo tour
 
 - `flake.nix` - the entry point.
-  Wires up nixpkgs, nix-darwin, home-manager, nix-homebrew, and disko, and declares the `mac` and `oci` machines.
+  Wires up nixpkgs, nix-darwin, home-manager, nix-homebrew, disko, microvm.nix, and rex, and declares the `mac`, `oci`, and `desktop` machines.
 - `configuration.nix` - system-level config: macOS defaults, Homebrew.
-- `home.nix` - user-level config shared by both machines: shell, packages, prompt, and the symlinks described below.
+- `home.nix` - user-level config shared by every machine: shell, packages, prompt, and the symlinks described below.
 - `home-darwin.nix`, `home-linux.nix` - the per-platform layers on top of `home.nix` (Homebrew paths and WezTerm on the Mac; the Homebrew CLI tools from nixpkgs on Linux).
-- `hosts/oci/` - the NixOS server's system config, hardware, and disk layout. See [docs/oracle-cloud-nixos.md](docs/oracle-cloud-nixos.md).
+- `hosts/oci/` - the NixOS server's system config, hardware, disk layout, and server-only home config.
+- `hosts/desktop/` - the desktop's system config, hardware, microvm host, and desktop-only home config.
 - `pkgs/` - packages nixpkgs doesn't have (herdr's Linux binary).
-- `rebuild.sh` - re-applies the config after the first switch, on either machine.
+- `rebuild.sh` - re-applies the config after the first switch, on any machine.
   Run this every time you make a change.
 - `home/` - the actual config files that get symlinked into place; the sections below explain the shared symlink model and Pi's narrower selective setup.
 
@@ -159,7 +164,9 @@ You only run `./rebuild.sh` when you change something that isn't just a symlinke
 ## Claude session archive
 
 Every 15 minutes, `claude-sessions-sync` copies `~/.claude` transcripts into `~/claude-sessions/<host>/`, and Syncthing shares that folder with every machine over the tailnet.
-Agents search it with the `search-sessions` skill.
+`cs QUERY` searches it: on a terminal it opens fzf with a preview of the conversation around each hit, and Enter prints the `claude --resume` command.
+Agents run the same command through the `search-sessions` skill.
+`cs` keeps a full-text index in `~/.cache/claude-sessions`, built on each machine from the archive, so deleting it is safe.
 To add a machine:
 
 1. Run `./rebuild.sh` on it, then `syncthing device-id` to print its ID.

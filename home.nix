@@ -18,6 +18,9 @@ let
     runtimeInputs = with pkgs; [ rsync coreutils hostname ];
     text = builtins.readFile ./home/claude-sessions-sync.sh;
   };
+
+  # `cs QUERY` searches the archive that claude-sessions-sync fills.
+  cs = pkgs.writers.writePython3Bin "cs" { flakeIgnore = [ "E501" ]; } (builtins.readFile ./home/cs.py);
 in
 
 {
@@ -31,6 +34,7 @@ in
     lazygit
     neovim
     claudeSessionsSync
+    cs
   ];
 
   # Shares ~/claude-sessions (every machine's Claude sessions, see search-sessions skill) over the
@@ -49,10 +53,12 @@ in
       };
       devices = {
         oci = { id = "XSXZYUW-M5WYIFU-VZGKOTE-LHFRZQK-CVAOMFP-AYPL4VD-MBET37K-S4W6GQ3"; addresses = [ "tcp://oci:22000" ]; };
+        monicas-macbook-pro = { id = "INBMCIY-ZA7A2EQ-FNWTN5A-KRJH2RY-FMQKRJ6-5IXBA3Q-AXZACJQ-3RHWRAF"; addresses = [ "tcp://monicas-macbook-pro:22000" ]; };
+        desktop = { id = "TYEMHDM-5VAILYB-6BDDZLA-STC4GMY-LH6LIWG-A5ANALD-DBNTHYO-STOD4QB"; addresses = [ "tcp://desktop:22000" ]; };
       };
       folders.claude-sessions = {
         path = "~/claude-sessions";
-        devices = [ "oci" ];
+        devices = [ "oci" "monicas-macbook-pro" "desktop" ];
       };
     };
   };

@@ -1,8 +1,19 @@
-{ lib, pkgs, user, ... }:
+{ lib, pkgs, user, inputs, ... }:
 
 # Linux-only home config, layered on top of home.nix.
 # Covers the Homebrew CLI tools from configuration.nix that make sense on a headless server.
 {
+  imports = [ inputs.rex.homeManagerModules.default ];
+
+  # Installs the rex command, its xterm-rex terminfo entry, and its ssh guard in ~/.ssh/config.
+  # Each host's hosts/<host>/home.nix runs the rex server.
+  programs.rex.enable = true;
+  # home-manager owns ~/.ssh/config so programs.rex can add its ssh guard.
+  programs.ssh = {
+    enable = true;
+    enableDefaultConfig = false;
+  };
+
   home.homeDirectory = "/home/${user}";
   home.stateVersion = "26.05";
   home.packages = with pkgs; [

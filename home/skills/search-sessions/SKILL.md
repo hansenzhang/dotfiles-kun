@@ -3,32 +3,34 @@ name: search-sessions
 description: Search past Claude Code sessions from every machine. Use when the user asks what was decided, said or found in an earlier session, or the answer may live in a past conversation rather than the repo.
 ---
 
-`~/claude-sessions/<host>/` holds every machine's sessions, synced by Syncthing every 15 minutes:
-
-- `projects/<project-dir>/<session-id>.jsonl` is one transcript, one JSON event per line. `<project-dir>` is the session's cwd with `/` replaced by `-`.
-- `history.jsonl` lists every prompt the user typed, with `project` and `timestamp`.
-- `plans/` holds plan-mode plans as markdown.
+`~/claude-sessions/<host>/` holds every machine's sessions, synced by Syncthing every 15 minutes. `cs` searches the user and assistant prose in them, and the plan-mode plans, ranked by relevance. It does not index tool calls or tool output.
 
 ## Steps
 
-1. Find candidate sessions by file name. Search every host, since the session may have run elsewhere:
+1. Search. Every term must match, and words are stemmed, so `deploy` finds `deploying`:
 
    ```sh
-   rg -l -i -g '*.jsonl' -g '*.md' 'smolvm' ~/claude-sessions/*/projects ~/claude-sessions/*/plans
+   cs smolvm networking
    ```
 
-   Narrow with more terms or a project dir glob when the list is long. Worktree sessions get dirs like `-home-hansen--treehouse-<repo>-<id>-<repo>`, so glob on the repo name: `~/claude-sessions/*/projects/*potential-chainsaw*`. Newest first: pipe through `xargs ls -t`.
+   Each result is one session: `<host>:<session-id>`, date, cwd, the best-matching snippet, and a `cs show` command. Use fewer or different terms when nothing matches. `-p potential-chainsaw` keeps sessions whose cwd contains that text, and `-n 50` returns more sessions.
 
-2. Read the conversation text of each candidate, without tool output:
+2. Read the conversation around a hit by running its `cs show` line:
 
    ```sh
-   jq -r 'select(.type=="user" or .type=="assistant")
-     | .message.content | if type=="string" then . else map(select(.type=="text").text) | join("\n") end
-     | select(length>0)' FILE.jsonl
+   cs show oci:76aeff0e-a19c-4272-acb2-c09865ec5670 --at 2026-11-07T15:44:55.172Z
    ```
 
-   Pipe through `rg -i -C5 TERM` to jump to the hits. The conclusion usually sits in the last assistant messages, so check the tail too.
+   This prints from one turn before the hit to the end of the session. Drop `--at` for the whole session. The conclusion usually sits in the last assistant messages.
 
-3. Report the answer, then cite each source as `<host>:<session-id>` with the session's date, so the user can `claude --resume <session-id>` on that host.
+3. When the term would only appear in a command or its output (an error message, a file path), search the raw transcripts instead:
 
-Done when the answer is backed by quoted text from a transcript, or every host's archive was searched and came up empty.
+   ```sh
+   rg -l -i -g '*.jsonl' 'ECONNREFUSED' ~/claude-sessions/*/projects
+   ```
+
+   The file name is the session id and its first path segment is the host, so read it with `cs show <host>:<session-id>`.
+
+4. Report the answer, then cite each source as `<host>:<session-id>` with the session's date, so the user can `claude --resume <session-id>` on that host.
+
+Done when the answer is backed by quoted text from a transcript, or `cs` and `rg` both came up empty.

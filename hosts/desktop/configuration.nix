@@ -36,7 +36,7 @@
     extraGroups = [ "wheel" "networkmanager" "docker" "kvm" ];
     shell = pkgs.zsh;
     openssh.authorizedKeys.keyFiles = [ ../oci/authorized_keys ];
-    linger = true;  # keeps the Rex user service (hosts/desktop/rex.nix) running while logged out
+    linger = true;  # keeps the Rex user service (hosts/desktop/home.nix) running while logged out
   };
   programs.zsh.enable = true;
 

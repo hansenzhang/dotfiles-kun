@@ -24,3 +24,6 @@ result-*
 
 # ignore personal md
 practice.md
+
+# python test runs
+__pycache__/

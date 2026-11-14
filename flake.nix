@@ -24,12 +24,12 @@
     # Lightweight VMs (Firecracker, cloud-hypervisor, qemu) as NixOS modules; desktop runs the host side.
     microvm.url = "github:microvm-nix/microvm.nix";
     microvm.inputs.nixpkgs.follows = "nixos";
-    # Rex terminal multiplexer, prebuilt. `nix flake update rex` moves to the newest snapshot.
+    # Rex terminal multiplexer, prebuilt; home-linux.nix enables it. `nix flake update rex` moves to the newest snapshot.
     rex.url = "https://pkgs.superlogical.com/rex/nix/snapshot.tar.gz";
     rex.inputs.nixpkgs.follows = "nixos";
   };
 
-  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixos, nixpkgs-unstable, disko, microvm, rex, ... }:
+  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixos, nixpkgs-unstable, disko, microvm, ... }:
     let
       # The one username line to change if this isn't your machine.
       # bootstrap.sh offers to rewrite this for you if your macOS username differs.
@@ -79,6 +79,7 @@
           claudeCodeFromUnstable
           home-manager.nixosModules.home-manager
           (homeManager ./home-linux.nix)
+          { home-manager.users.${user}.imports = [ ./hosts/oci/home.nix ]; }
         ];
       };
 
@@ -91,9 +92,7 @@
           claudeCodeFromUnstable
           home-manager.nixosModules.home-manager
           (homeManager ./home-linux.nix)
-          {
-            home-manager.users.${user}.imports = [ rex.homeManagerModules.default ./hosts/desktop/rex.nix ];
-          }
+          { home-manager.users.${user}.imports = [ ./hosts/desktop/home.nix ]; }
         ];
       };
     };
