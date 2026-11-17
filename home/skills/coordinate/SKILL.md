@@ -35,7 +35,8 @@ A brief is one worker's work order: a GitHub issue, or a comment on one, with th
 
 A worker that must outlive the coordinator's session runs in a rex session. The captain can attach to it.
 
-- **Start:** `rex new <label> -c <repo dir> --keep-open --shell zsh -- claude --model <id> --permission-mode auto "<prompt>"`. Point the prompt at the brief.
+- **Start:** `rex new <label> -c <repo dir> --keep-open --shell zsh -- zsh -lic 'claude --model <id> --permission-mode auto "<prompt>"'`. Point the prompt at the brief. The login shell puts `claude` on PATH; a bare `-- claude` fails with "command not found".
+- **Address by ID:** a SessionStart hook tells each Claude session to rename its own rex session, so the label given to `rex new` does not last. Keep the session ID that `rex new` prints (`session:<uuid>`) and pass it, or its last 6 characters from `rex ls`, as `-s` in every command below.
 - **Folder-trust prompt** (first run in a directory): `rex send-key -s <label> down enter`.
 - **Read:** `rex capture -s <label> --trim | tail -40`.
 - **Steer:** `rex send -s <label> '<text>' && rex send-key -s <label> enter`.
