@@ -93,6 +93,13 @@ in
     initContent = lib.mkMerge [
       ''
         bindkey '^f' autosuggest-accept
+
+        # Rebuild, reload rex config if rex is installed, then restart this shell.
+        reload() {
+          ~/.dotfiles/rebuild.sh || return
+          if command -v rex >/dev/null; then rex config reload; fi
+          exec zsh
+        }
       ''
       # Rex puts its CLI's directory first on PATH before the startup files run, and they drop it.
       # Last in .zshrc so nothing reorders it again.
