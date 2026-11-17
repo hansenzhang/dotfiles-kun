@@ -18,9 +18,6 @@
     # Declarative partitioning; nixos-anywhere uses it to format the server at install time.
     disko.url = "github:nix-community/disko/v1.13.0";
     disko.inputs.nixpkgs.follows = "nixos";
-    # Upstream agent skills; home.nix links the ones I use.
-    mattpocock-skills.url = "github:mattpocock/skills";
-    mattpocock-skills.flake = false;
     # Lightweight VMs (Firecracker, cloud-hypervisor, qemu) as NixOS modules; desktop runs the host side.
     microvm.url = "github:microvm-nix/microvm.nix";
     microvm.inputs.nixpkgs.follows = "nixos";

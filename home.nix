@@ -4,15 +4,14 @@
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
 
-  # Agent skills by name. Mine live in home/skills and link out of the store so edits apply live;
-  # upstream ones come pinned from flake inputs.
-  skills = {
-    unslop = "${dotfiles}/home/skills/unslop";
-    search-sessions = "${dotfiles}/home/skills/search-sessions";
-    coordinate = "${dotfiles}/home/skills/coordinate";
-    rex = "${dotfiles}/home/skills/rex";
-    writing-for-agents = "${inputs.mattpocock-skills}/skills/productivity/writing-for-agents";
-  };
+  # Agent skills, all in home/skills, linked out of the store so edits apply live.
+  # Most are edited copies of github.com/mattpocock/skills (see home/skills/LICENSE-mattpocock).
+  skills = lib.genAttrs [
+    "unslop" "search-sessions" "coordinate" "rex"
+    "writing-for-agents" "grilling" "grill-me" "grill-with-docs" "domain-modeling"
+    "setup-matt-pocock-skills" "to-spec" "to-tickets" "wayfinder" "research" "prototype"
+    "tdd" "codebase-design" "diagnosing-bugs"
+  ] (name: "${dotfiles}/home/skills/${name}");
 
   # Runs every 15 minutes: a systemd timer on Linux, a launchd agent on the Mac.
   claudeSessionsSync = pkgs.writeShellApplication {
