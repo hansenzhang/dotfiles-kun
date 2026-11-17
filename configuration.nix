@@ -19,6 +19,14 @@ in
     home = "/Users/${user}";
   };
   system.stateVersion = 6;
+
+  # Key-only SSH. The 098 prefix sorts before macOS's 100-macos.conf; sshd keeps the first value it reads.
+  # macOS answers passwords through PAM, so keyboard-interactive must be off too.
+  environment.etc."ssh/sshd_config.d/098-no-passwords.conf".text = ''
+    PasswordAuthentication no
+    KbdInteractiveAuthentication no
+  '';
+
   system.defaults = {
     NSGlobalDomain = {
       AppleInterfaceStyle = "Dark";
