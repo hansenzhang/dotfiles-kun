@@ -30,8 +30,7 @@
   security.sudo.wheelNeedsPassword = false;
   programs.zsh.enable = true;
 
-  # While Tailscale SSH is on (`tailscale up --ssh`), it answers port 22 on the tailnet address.
-  # With it off (`tailscale set --ssh=false`), this sshd serves 22 on the tailnet too.
+  # Tailscale SSH is off, so this sshd serves port 22 on the tailnet too.
   services.openssh = {
     enable = true;
     ports = [ 22 ];
@@ -43,7 +42,7 @@
     };
   };
 
-  # Join once with `sudo tailscale up --ssh`; the login persists in /var/lib/tailscale.
+  # Join once with `sudo tailscale up`; the login persists in /var/lib/tailscale.
   # openFirewall opens UDP 41641 so peers can connect directly instead of through DERP relays.
   services.tailscale = {
     enable = true;

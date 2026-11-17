@@ -92,44 +92,37 @@ cd ~/github/dotfiles-kun
 On the server:
 
 ```sh
-sudo tailscale up --ssh
+sudo tailscale up
 ```
 
 Open the printed URL and approve the machine. The login persists in `/var/lib/tailscale` across reboots and rebuilds.
 In the Tailscale admin console, consider disabling key expiry for `oci` so it never silently drops off the tailnet.
 
-From the Mac (the Tailscale app stays installed outside Nix there):
+Tailscale SSH stays off. The server's own sshd answers port 22 on the tailnet address, and the key in `hosts/oci/authorized_keys` is the only login.
+Add this to `~/.ssh/config` on the Mac (the Tailscale app stays installed outside Nix there), then connect:
+
+```
+Host oci
+  User hansen
+  IdentityFile ~/.ssh/id_ed25519_oci
+  IdentitiesOnly yes
+```
 
 ```sh
 ssh hansen@oci
 ```
 
-With `--ssh`, Tailscale handles auth by tailnet identity, no key file needed.
-It only works if the tailnet policy has an `ssh` rule; without one the connection fails with "tailnet policy does not permit you to SSH to this node".
-In the admin console's Access controls, add:
-
-```json
-"ssh": [
-  {
-    "action": "accept",
-    "src":    ["autogroup:member"],
-    "dst":    ["autogroup:self"],
-    "users":  ["autogroup:nonroot", "root"]
-  }
-]
-```
-
-`accept` lets your own devices in without prompting. `check` adds a browser re-auth every 12 hours, which breaks unattended SSH such as agents and scripts.
+If the node was ever joined with `--ssh`, turn it off with `sudo tailscale set --ssh=false`. Otherwise Tailscale answers port 22 itself and rejects the key.
 
 ## 5. Close the public SSH port
 
-Once Tailscale SSH works, edit the subnet's security list in the OCI console (Networking, Virtual cloud networks, your VCN, Security):
+Once `ssh hansen@oci` works over the tailnet, edit the subnet's security list in the OCI console (Networking, Virtual cloud networks, your VCN, Security):
 
 - Remove the ingress rule for TCP 22. With no ingress rules left, the public IP accepts nothing; Tailscale still connects through outbound NAT traversal.
 - Optionally add ingress UDP 41641 from `0.0.0.0/0`. It lets Tailscale peers connect directly instead of through a DERP relay; the NixOS firewall already allows it.
 
-Only do this after `ssh hansen@oci` works. With `--ssh`, Tailscale answers port 22 on the tailnet address itself, so key-based SSH is not a fallback over the tailnet.
-If Tailscale SSH breaks later, re-add the TCP 22 rule for your home IP and use `ssh -i ~/.ssh/id_ed25519_oci hansen@<public-ip>`; sshd keeps running for exactly that.
+Only do this after the tailnet login works.
+If Tailscale breaks later, re-add the TCP 22 rule for your home IP and use `ssh -i ~/.ssh/id_ed25519_oci hansen@<public-ip>`; sshd keeps running for exactly that.
 
 ## Daily use
 
