@@ -19,7 +19,7 @@ Decisions go on the issue or into an ADR. Lessons that outlast the session go in
 
 1. Read the handoff file and the repo's `AGENTS.md`.
 2. Check CI on the default branch, open issues and open PRs.
-3. Find what still runs: `rex ls`, background monitors, worktrees, unmerged branches. Arm a watch on each running worker first.
+3. Find what still runs: `rex ls`, `treehouse status` in each repo for leased worktrees, background monitors, unmerged branches. Arm a watch on each running worker first.
 4. Give the captain the questions they must answer, each with a recommendation, then what you do next.
 
 ## Briefs
@@ -35,13 +35,14 @@ A brief is one worker's work order: a GitHub issue, or a comment on one, with th
 
 A worker that must outlive the coordinator's session runs in a rex session. The captain can attach to it.
 
-- **Start:** `rex new <label> -c <repo dir> --keep-open --shell zsh -- zsh -lic 'claude --model <id> --permission-mode auto "<prompt>"'`. Point the prompt at the brief. The login shell puts `claude` on PATH; a bare `-- claude` fails with "command not found".
+- **Worktree:** in the repo, `treehouse get --lease -b <branch> --lease-holder <label>` leases a worktree on a new branch and prints its path. Pass that path as `-c` below, and tell the worker to work there and create no worktree of its own. The lease holds until `treehouse return <path>`.
+- **Start:** `rex new <label> -c <worktree path> --keep-open --shell zsh -- zsh -lic 'claude --model <id> --permission-mode auto "<prompt>"'`. Point the prompt at the brief. The login shell puts `claude` on PATH; a bare `-- claude` fails with "command not found". `rex new` has no `--focus` flag and leaves the captain's app view where it is.
 - **Address by ID:** a SessionStart hook tells each Claude session to rename its own rex session, so the label given to `rex new` does not last. Add `--json` to `rex new` and keep `.session_id` and `.initial_windows[0].block_ids[0]`. Pass the session ID, or its last 6 characters from `rex ls`, as `-s` in every command below. The watch needs the block ID.
 - **Folder-trust prompt** (first run in a directory): `rex send-key -s <label> down enter`.
 - **Read:** `rex capture -s <label> --trim | tail -40`.
 - **Steer:** `rex send -s <label> '<text>' && rex send-key -s <label> enter`.
-- **List and end:** `rex ls`, `rex kill <label>`.
-- **Replace in place:** `rex window new -s <label> -c <repo dir> --keep-open --shell zsh -- claude --model <id> --permission-mode auto "<prompt>"` starts the replacement as a new window of the same session, so the label stays and no `<label>-2` appears. The new window becomes the active one, and `-s <label>` reads and steers the active window. Then close the old window: `rex window ls -s <label>`, `rex window close -s <label> <number>`. Add `-w <number>` to `capture`, `send` and `send-key` to address one window.
+- **List and end:** `rex ls`, `rex kill <label>`. Once the branch is merged or abandoned, release the worktree with `treehouse return <worktree path>`, then delete the branch with `git branch -d <branch>`, which the return keeps.
+- **Replace in place:** `rex window new -s <label> -c <worktree path> --focus=false --keep-open --shell zsh --json -- zsh -lic 'claude --model <id> --permission-mode auto "<prompt>"'` starts the replacement as a new window of the same session, so the label stays and no `<label>-2` appears. `--focus=false` keeps the old window active, so a captain viewing the session stays where they are. Close the old window with `rex window ls -s <label>` and `rex window close -s <label> <number>`; the replacement then becomes the active window, and `-s <label>` reads and steers it. Add `-w <number>` to `capture`, `send` and `send-key` to address one window. Arm the watch on the new `.block_ids[0]`.
 - **Paused by the captain:** resume only when the captain says so.
 - **Context:** the status line shows the share used. At 20% used the worker hands off: a handoff comment on its brief, then its replacement as a new window of its own session.
 
