@@ -49,6 +49,10 @@
     wayland.enable = true;
   };
   systemd.defaultUnit = lib.mkForce "multi-user.target";
+  # The lingering user manager runs DrKonqi's crash launcher with no display, so the launcher
+  # aborts in Qt init, and its own coredump starts the next launcher. On 2026-11-14 that loop
+  # left 130k failed units and made the user manager too slow for activation. Mask it.
+  systemd.user.units."drkonqi-coredump-launcher.socket".enable = false;
   # With a display manager enabled, NixOS keeps getty.target from starting tty1's login, so
   # boot would end on a blank tty1. Start it at boot unless the GUI already holds tty1.
   systemd.services.tty1-login = {
