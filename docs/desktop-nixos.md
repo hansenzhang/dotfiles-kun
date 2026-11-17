@@ -76,7 +76,7 @@ git clone -b desktop-host /mnt/data/dotfiles-kun ~/dotfiles
 cd ~/dotfiles && ./rebuild.sh   # links ~/.dotfiles, switches to #desktop by hostname
 git add flake.lock && git commit -m "lock microvm"   # the first build adds the new input to the lock
 git push origin desktop-host   # optional: send the lock back to D:\dotfiles-kun (origin is D: here)
-sudo tailscale up --ssh
+sudo tailscale up
 ```
 
 Then boot Windows once and check the clock is right (`time.hardwareClockInLocalTime`).
