@@ -150,9 +150,6 @@ nix flake update nixos nixpkgs-unstable && ./rebuild.sh
 ```
 `programs.nix-ld` lets generic Linux binaries run, like uv's downloaded Pythons and npm packages that ship prebuilt executables.
 
-`pkgs/herdr.nix` pins herdr's static release binary, since herdr isn't in nixpkgs.
-To upgrade it, bump `version` and replace `hash` with the one Nix reports on the next rebuild.
-
 ## Recovery
 
 If a rebuild breaks networking or SSH, use the OCI serial console: the instance page, Console connection, Launch Cloud Shell connection.

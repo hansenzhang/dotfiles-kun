@@ -9,6 +9,5 @@ return {
     event = 'BufWinEnter',
     opts = { current_line_blame = true },  -- who last touched this line
   },
-  { 'ChmaraX/herdr-nvim', opts = {} },  -- <leader>a* annotations sent to the herdr agent
 }
 

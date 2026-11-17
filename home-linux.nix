@@ -17,7 +17,6 @@
   home.homeDirectory = "/home/${user}";
   home.stateVersion = "26.05";
   home.packages = with pkgs; [
-    (callPackage ./pkgs/herdr.nix { })
     tmux
     gh          # GitHub CLI
     uv          # Python; the activation below installs the default interpreter with it

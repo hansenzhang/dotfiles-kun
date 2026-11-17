@@ -42,20 +42,6 @@ in
     fi
   '';
 
-  # herdr's SessionStart hook in the linked settings.json runs ~/.claude/hooks/herdr-agent-state.sh,
-  # which only `herdr integration install claude` writes. That command also appends a second,
-  # absolute-path hook to settings.json (and the file is a repo symlink), so run it against a
-  # throwaway HOME and copy out just the script.
-  home.activation.herdrClaudeHook = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    if [ -x /opt/homebrew/bin/herdr ] && [ ! -f "$HOME/.claude/hooks/herdr-agent-state.sh" ]; then
-      tmp=$(mktemp -d)
-      mkdir "$tmp/.claude"  # the installer refuses to run without one
-      HOME="$tmp" /opt/homebrew/bin/herdr integration install claude > /dev/null
-      run install -Dm755 "$tmp/.claude/hooks/herdr-agent-state.sh" "$HOME/.claude/hooks/herdr-agent-state.sh"
-      rm -rf "$tmp"
-    fi
-  '';
-
   programs.zsh = {
     initContent = ''
       # Set here, not in sessionPath, so it lands after /etc/zshrc runs `brew shellenv`

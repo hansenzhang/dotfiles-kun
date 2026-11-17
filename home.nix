@@ -151,31 +151,6 @@ in
     fi
   '';
 
-  # herdr plugins ("<plugin id> <install source>"). Installs only the missing ones, unpinned;
-  # upgrade with `herdr plugin update`. Their keys live in home/.config/herdr/config.toml.
-  # herdr is Homebrew's on the Mac and in the per-user profile on NixOS, whose home-manager
-  # service PATH has neither, so add both. Installs clone with git and run bash build scripts;
-  # usagebar's uses awk; heeler's runs `npm ci`; gitview checks its x86_64 download with shasum
-  # (perl) and has no aarch64-linux binary, so there it runs `cargo build`, whose onig crate
-  # needs a C compiler.
-  home.activation.herdrPlugins = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    export PATH="${lib.makeBinPath (with pkgs; [ nodejs_26 git bash curl gnutar gzip gawk perl cargo rustc gcc ])}:$PATH:/etc/profiles/per-user/$USER/bin:/opt/homebrew/bin"
-    if command -v herdr > /dev/null; then
-      installed=$(herdr plugin list)
-      for spec in \
-        "usagebar senna-lang/herdr-agent-usage" \
-        "heeler ZingerLittleBee/Heeler/plugin" \
-        "chmarax.herdr-nvim ChmaraX/herdr-nvim" \
-        "chmarax.gitview ChmaraX/herdr-gitview"; do
-        set -- $spec
-        case "$installed" in
-          *"- $1 ("*) ;;
-          *) run herdr plugin install --yes "$2" ;;
-        esac
-      done
-    fi
-  '';
-
   # Ctrl-R history, Ctrl-T file path, Alt-C cd. fd makes the pickers skip .git and gitignored files.
   programs.fzf = {
     enable = true;
@@ -218,8 +193,6 @@ in
   # Edit-in-place: the real file stays in my repo, ~/.config just points at it.
   home.file.".config/nvim".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/nvim";
-  home.file.".config/herdr".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/herdr";
   home.file.".config/rex".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/rex";
   home.file.".claude/settings.json".source =

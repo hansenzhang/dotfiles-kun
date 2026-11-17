@@ -58,7 +58,6 @@ in
     onActivation.autoUpdate = true;
     onActivation.extraFlags = [ "--force" ];
     brews = [
-      "herdr"
       "tmux"
       "gh"        # GitHub CLI
       "asdf"      # runtime version manager; shims are wired up in home.nix
