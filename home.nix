@@ -90,9 +90,18 @@ in
     enable = true;
     autosuggestion.enable = true;      # ghost text from history
     syntaxHighlighting.enable = true;  # commands turn green when valid
-    initContent = ''
-      bindkey '^f' autosuggest-accept
-    '';
+    initContent = lib.mkMerge [
+      ''
+        bindkey '^f' autosuggest-accept
+      ''
+      # Rex puts its CLI's directory first on PATH before the startup files run, and they drop it.
+      # Last in .zshrc so nothing reorders it again.
+      (lib.mkOrder 2000 ''
+        if [ -n "$REX_BIN_DIR" ]; then
+          export PATH="$REX_BIN_DIR:$PATH"
+        fi
+      '')
+    ];
     shellAliases = {
       ".." = "cd ..";
       add = "git add .";
@@ -211,6 +220,8 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/nvim";
   home.file.".config/herdr".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/herdr";
+  home.file.".config/rex".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/rex";
   home.file.".claude/settings.json".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.claude/settings.json";
 
