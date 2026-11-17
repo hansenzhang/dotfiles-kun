@@ -65,7 +65,11 @@ done
 
 ## Research
 
-Vendor docs, prices, web search and broad code search go to a spawned agent. Ask for a short table of facts with source URLs. This keeps the coordinator's context small.
+Vendor docs, prices, web search and broad code search go to a research worker in its own rex session, not to an in-process subagent and not inline. The captain can attach to a rex session and steer it, it outlives the coordinator, and the coordinator's context stays small.
+
+- Ask for a short table of facts with source URLs.
+- Name where the report goes: an issue comment or a file. A rex session returns nothing to the coordinator by itself.
+- Arm an idle watch on it, read the report when it stops, then end the session.
 
 ## Review
 
