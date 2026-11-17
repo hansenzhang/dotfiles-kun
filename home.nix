@@ -9,6 +9,7 @@ let
   skills = {
     unslop = "${dotfiles}/home/skills/unslop";
     search-sessions = "${dotfiles}/home/skills/search-sessions";
+    coordinate = "${dotfiles}/home/skills/coordinate";
     writing-for-agents = "${inputs.mattpocock-skills}/skills/productivity/writing-for-agents";
   };
 
