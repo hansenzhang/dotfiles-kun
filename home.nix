@@ -5,12 +5,11 @@ let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
 
   # Agent skills, all in home/skills, linked out of the store so edits apply live.
-  # Most are edited copies of github.com/mattpocock/skills (see home/skills/LICENSE-mattpocock).
+  # writing-for-agents, grilling and diagnosing-bugs are edited copies of
+  # github.com/mattpocock/skills (see home/skills/LICENSE-mattpocock).
   skills = lib.genAttrs [
     "unslop" "search-sessions" "coordinate" "rex"
-    "writing-for-agents" "grilling" "grill-me" "grill-with-docs" "domain-modeling"
-    "setup-matt-pocock-skills" "to-spec" "to-tickets" "wayfinder" "research" "prototype"
-    "tdd" "codebase-design" "diagnosing-bugs"
+    "writing-for-agents" "grilling" "diagnosing-bugs"
   ] (name: "${dotfiles}/home/skills/${name}");
 
   # Runs every 15 minutes: a systemd timer on Linux, a launchd agent on the Mac.
