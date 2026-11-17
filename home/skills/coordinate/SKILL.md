@@ -41,7 +41,7 @@ A worker that must outlive the coordinator's session runs in a rex session. The 
 - **Steer:** `rex send -s <label> '<text>' && rex send-key -s <label> enter`.
 - **List and end:** `rex ls`, `rex kill`.
 - **Paused by the captain:** resume only when the captain says so.
-- **Context:** the status line shows the share used, not the share left.
+- **Context:** the status line shows the share used. At 20% used the worker hands off: a handoff comment on its brief, then its own replacement session.
 
 Every Claude session of the account draws on one session limit: the coordinator, each worker and each worker's subworkers. Cap the workers so the limit holds until the reset, and tell each worker its cap.
 
@@ -72,7 +72,7 @@ Read every diff a worker merges or pushes. Report what you ran and what you only
 
 ## Handoff
 
-The captain switches coordinators at about 20% context left.
+The captain switches sessions at about 20% of context used, which is about 200k tokens. The same threshold applies to the workers.
 
 1. Rewrite the handoff file in place. It is the only one.
 2. Move a lesson that will outlast the session into a skill, through a PR. Prune before adding.
