@@ -36,7 +36,7 @@ A brief is one worker's work order: a GitHub issue, or a comment on one, with th
 A worker that must outlive the coordinator's session runs in a rex session. The captain can attach to it.
 
 - **Start:** `rex new <label> -c <repo dir> --keep-open --shell zsh -- zsh -lic 'claude --model <id> --permission-mode auto "<prompt>"'`. Point the prompt at the brief. The login shell puts `claude` on PATH; a bare `-- claude` fails with "command not found".
-- **Address by ID:** a SessionStart hook tells each Claude session to rename its own rex session, so the label given to `rex new` does not last. Keep the session ID that `rex new` prints (`session:<uuid>`) and pass it, or its last 6 characters from `rex ls`, as `-s` in every command below.
+- **Address by ID:** a SessionStart hook tells each Claude session to rename its own rex session, so the label given to `rex new` does not last. Add `--json` to `rex new` and keep `.session_id` and `.initial_windows[0].block_ids[0]`. Pass the session ID, or its last 6 characters from `rex ls`, as `-s` in every command below. The watch needs the block ID.
 - **Folder-trust prompt** (first run in a directory): `rex send-key -s <label> down enter`.
 - **Read:** `rex capture -s <label> --trim | tail -40`.
 - **Steer:** `rex send -s <label> '<text>' && rex send-key -s <label> enter`.
@@ -51,18 +51,24 @@ Every Claude session of the account draws on one session limit: the coordinator,
 
 Arm a Monitor per worker and work on something else. A monitor lasts 30 minutes: re-arm on the expiry notice. A routine event gets one line to the captain.
 
-Idle watch for a rex session. It emits the screen's tail once the screen stops changing for 3 minutes:
+Claude Code reports its state to rex, and `watch.lua` (next to this file) turns that into one line per event that needs the coordinator:
 
 ```sh
-label=<label>; prev=""; same=0; told=0
-while true; do
-  if ! rex ls 2>/dev/null | grep -q "$label"; then echo "session $label is gone"; break; fi
-  cur=$(rex capture -s "$label" --trim 2>/dev/null | tail -40 | sed -E 's/\([0-9hms ]+·[^)]*\)//' | md5sum)
-  if [ "$cur" = "$prev" ]; then same=$((same+1)); else same=0; told=0; prev="$cur"; fi
-  if [ $same -ge 6 ] && [ $told -eq 0 ]; then echo "screen unchanged for 3 min:"; rex capture -s "$label" --trim 2>/dev/null | tail -12 | cut -c1-160; told=1; fi
-  sleep 30
-done
+rex do -s <session-id> --for 30m ~/.claude/skills/coordinate/watch.lua block=<block-id>
 ```
+
+| Line | Meaning |
+| --- | --- |
+| `blocked/permission: <msg>` | Waits on a tool approval. `<msg>` names the command. |
+| `blocked/question: <msg>`, `blocked/auth: <msg>`, `blocked: <msg>` | Waits on an answer, a login or an open dialog. |
+| `done: <msg>` | The turn ended. |
+| `idle: <msg>` | The turn was cancelled. |
+| `error: <msg>` | The turn ended on an error, such as a session limit. `<msg>` is the error text. |
+| `gone: <why>` | The program exited or the block closed. The watch ends. |
+
+Updates while the worker is `working` print nothing. On arming, the watch prints the current state once if it is `blocked`, `done` or `error`. Run `rex capture` only when a line calls for a look.
+
+A program other than Claude Code may report no status. Check with `rex api call com.superlogical.terminal.program_status '{"session_id":"<id>","block_id":"<id>","args":{}}'`, which then returns no records. For such a program, fall back to a screen hash. Every 30 s, hash `rex capture -s <id> --trim | tail -40`, and print the tail once the hash stays the same for 3 minutes. Stop when the session leaves `rex ls`.
 
 ## Research
 
@@ -70,7 +76,7 @@ Vendor docs, prices, web search and broad code search go to a research worker in
 
 - Ask for a short table of facts with source URLs.
 - Name where the report goes: an issue comment or a file. A rex session returns nothing to the coordinator by itself.
-- Arm an idle watch on it, read the report when it stops, then end the session.
+- Arm a watch on it, read the report on `done`, then end the session.
 
 ## Review
 
