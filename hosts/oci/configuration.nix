@@ -30,12 +30,11 @@
   security.sudo.wheelNeedsPassword = false;
   programs.zsh.enable = true;
 
-  # Tailscale SSH answers port 22 on the tailnet address, so OpenSSH also listens on 2222 for
-  # clients that need the real sshd there (Heeler pairing; see `ssh_port` in herdr's heeler
-  # pair.json). 2222 is only opened on tailscale0; 22 stays public for the VCN security list.
+  # While Tailscale SSH is on (`tailscale up --ssh`), it answers port 22 on the tailnet address.
+  # With it off (`tailscale set --ssh=false`), this sshd serves 22 on the tailnet too.
   services.openssh = {
     enable = true;
-    ports = [ 22 2222 ];
+    ports = [ 22 ];
     openFirewall = false;
     settings = {
       PasswordAuthentication = false;
@@ -52,7 +51,7 @@
   };
   networking.firewall.allowedTCPPorts = [ 22 ];
   # 22000 is Syncthing (home.nix), which syncs only over the tailnet.
-  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 2222 22000 ];
+  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 22000 ];
 
   # Generic Linux binaries (uv's Pythons, npm packages with prebuilt binaries) expect a normal
   # dynamic loader; nix-ld provides one.
