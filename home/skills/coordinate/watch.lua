@@ -12,6 +12,11 @@ local block = (rex.args or {}).block
 if not block then
   error("pass block=<block-id>")
 end
+-- Events carry the prefixed form, and program_status returns nothing for a
+-- bare UUID, so accept both.
+if not block:find("^block:") then
+  block = "block:" .. block
+end
 
 local last = nil -- "state/kind" of the last record seen
 
@@ -79,8 +84,8 @@ rex.after(0, function()
     block_id = block,
     args = {},
   })
-  if not ok then
-    gone("status read failed: " .. tostring(res))
+  if not ok or not res then
+    gone("status read failed: " .. tostring(res or "no such block"))
     return
   end
   for _, record in ipairs(res.records or {}) do
