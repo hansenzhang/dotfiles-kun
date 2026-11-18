@@ -32,6 +32,7 @@ in
     fzf       # fuzzy finder
     jq        # json on the command line
     lazygit
+    btop      # system monitor
     neovim
     claudeSessionsSync
     cs

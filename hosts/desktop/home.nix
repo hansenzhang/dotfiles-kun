@@ -12,4 +12,28 @@
       hostname = "desktop-rex";
     };
   };
+
+  # id_ed25519_tailnet is this machine's key for the Mac, oci and sylve; id_ed25519_github is GitHub only.
+  programs.ssh.settings = {
+    "github.com" = {
+      IdentityFile = "~/.ssh/id_ed25519_github";
+      IdentitiesOnly = true;
+    };
+    "mac" = {
+      HostName = "monicas-macbook-pro";
+      User = "hansen";
+      IdentityFile = "~/.ssh/id_ed25519_tailnet";
+      IdentitiesOnly = true;
+    };
+    "oci" = {
+      User = "hansen";
+      IdentityFile = "~/.ssh/id_ed25519_tailnet";
+      IdentitiesOnly = true;
+    };
+    "sylve" = {
+      User = "deploy";
+      IdentityFile = "~/.ssh/id_ed25519_tailnet";
+      IdentitiesOnly = true;
+    };
+  };
 }

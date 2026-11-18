@@ -14,7 +14,7 @@
   # uses ~35M of it, so cap how many generations keep a kernel + initrd there.
   boot.loader.systemd-boot = {
     enable = true;
-    configurationLimit = 5;
+    configurationLimit = 3;
   };
   boot.loader.efi.canTouchEfiVariables = true;
 
@@ -35,7 +35,10 @@
     isNormalUser = true;
     extraGroups = [ "wheel" "networkmanager" "docker" "kvm" ];
     shell = pkgs.zsh;
-    openssh.authorizedKeys.keyFiles = [ ../oci/authorized_keys ];
+    # Only the Mac's tailnet key; oci and sylve never connect in.
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEO/Wf115KSSu2CyAWr7b/s5qRwbnWWpwwrBFQ6wsElU hansen@monicas-macbook-pro"
+    ];
     linger = true;  # keeps the Rex user service (hosts/desktop/home.nix) running while logged out
   };
   programs.zsh.enable = true;

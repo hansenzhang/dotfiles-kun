@@ -17,6 +17,10 @@ in
   system.primaryUser = user;
   users.users.${user} = {
     home = "/Users/${user}";
+    # Only the desktop's tailnet key; oci and sylve never connect in.
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICGleuMZt2aLykES4KrvBksl8Z53qaCdkUGAVsFLx8gv hansen@desktop"
+    ];
   };
   system.stateVersion = 6;
 
