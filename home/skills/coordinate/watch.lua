@@ -26,9 +26,6 @@ local function line(state, kind, msg)
     head = state .. "/" .. kind
   end
   msg = tostring(msg or ""):gsub("[\r\n\t]", " ")
-  if #msg > 160 then
-    msg = msg:sub(1, 160)
-  end
   print(head .. ": " .. msg)
   io.stdout:flush()
 end

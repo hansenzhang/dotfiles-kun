@@ -36,13 +36,15 @@ A brief is one worker's work order: a GitHub issue, or a comment on one, with th
 A worker that must outlive the coordinator's session runs in a rex session. The captain can attach to it.
 
 - **Worktree:** in the repo, `treehouse get --lease -b <branch> --lease-holder <label>` leases a worktree on a new branch and prints its path. Pass that path as `-c` below, and tell the worker to work there and create no worktree of its own. The lease holds until `treehouse return <path>`.
-- **Start:** `rex new <label> -c <worktree path> --keep-open --shell zsh -- zsh -lic 'claude --model <id> --permission-mode auto "<prompt>"'`. Point the prompt at the brief. The login shell puts `claude` on PATH; a bare `-- claude` fails with "command not found". `rex new` has no `--focus` flag and leaves the captain's app view where it is.
+- **Start:** `sid=$(uuidgen)`, then `rex new <label> -c <worktree path> --keep-open --shell zsh -- zsh -lic "claude --model <id> --permission-mode auto --disallowedTools AskUserQuestion --session-id $sid '<prompt>'"`. Keep `$sid`: the worker's transcript is `~/.claude/projects/<worktree path with / and . replaced by ->/$sid.jsonl`. `--disallowedTools` takes several values, so keep another flag between it and the prompt. Point the prompt at the brief and end it with the question rule below. The login shell puts `claude` on PATH; a bare `-- claude` fails with "command not found". `rex new` has no `--focus` flag and leaves the captain's app view where it is.
 - **Address by ID:** a SessionStart hook tells each Claude session to rename its own rex session, so the label given to `rex new` does not last. Add `--json` to `rex new` and keep `.session_id` and `.initial_windows[0].block_ids[0]`. Pass the session ID, or its last 6 characters from `rex ls`, as `-s` in every command below. The watch needs the block ID.
 - **Folder-trust prompt** (first run in a directory): `rex send-key -s <label> down enter`.
-- **Read:** `rex capture -s <label> --trim | tail -40`.
-- **Steer:** `rex send -s <label> '<text>' && rex send-key -s <label> enter`.
+- **Question rule** (end every worker prompt with it): "When you need a decision the brief does not make, end your turn with the question as your final message: what you found, the options, and the one you recommend. Wait for the answer. If auto mode denies an action, report the action and the reason the same way, and do not retry it."
+- **Read:** the worker's last messages, from its transcript: `jq -r 'select(.type=="assistant") | .message.content[]? | select(.type=="text") | .text' <transcript> | tail -40`. The file can lag by a moment, so read it again when the turn looks cut short. Claude Code's fullscreen TUI has no scrollback, so `rex capture -s <label> --trim | tail -40` shows only the current screen. Use it for what the transcript does not hold: the folder-trust prompt, a permission prompt, a login.
+- **Steer or answer:** `rex send -s <label> '<text>' && rex send-key -s <label> enter`. Answer with the chosen option's words and any facts the worker lacked.
+- **Denied actions:** an auto-mode denial is the captain's call. Never approve it by typing into the worker, and do not retry it from your own session. Tell the captain the action, the reason and your recommendation. The captain runs it with `!` in a session or adds an allow rule.
 - **List and end:** `rex ls`, `rex kill <label>`. Once the branch is merged or abandoned, release the worktree with `treehouse return <worktree path>`, then delete the branch with `git branch -d <branch>`, which the return keeps.
-- **Replace in place:** `rex window new -s <label> -c <worktree path> --focus=false --keep-open --shell zsh --json -- zsh -lic 'claude --model <id> --permission-mode auto "<prompt>"'` starts the replacement as a new window of the same session, so the label stays and no `<label>-2` appears. `--focus=false` keeps the old window active, so a captain viewing the session stays where they are. Close the old window with `rex window ls -s <label>` and `rex window close -s <label> <number>`; the replacement then becomes the active window, and `-s <label>` reads and steers it. Add `-w <number>` to `capture`, `send` and `send-key` to address one window. Arm the watch on the new `.block_ids[0]`.
+- **Replace in place:** `rex window new -s <label> -c <worktree path> --focus=false --keep-open --shell zsh --json -- zsh -lic "claude --model <id> --permission-mode auto --disallowedTools AskUserQuestion --session-id $sid '<prompt>'"` (a new `sid`) starts the replacement as a new window of the same session, so the label stays and no `<label>-2` appears. `--focus=false` keeps the old window active, so a captain viewing the session stays where they are. Close the old window with `rex window ls -s <label>` and `rex window close -s <label> <number>`; the replacement then becomes the active window, and `-s <label>` reads and steers it. Add `-w <number>` to `capture`, `send` and `send-key` to address one window. Arm the watch on the new `.block_ids[0]`.
 - **Paused by the captain:** resume only when the captain says so.
 - **Context:** the status line shows the share used. At 20% used the worker hands off: a handoff comment on its brief, then its replacement as a new window of its own session.
 
@@ -62,12 +64,12 @@ rex do -s <session-id> --for 30m ~/.claude/skills/coordinate/watch.lua block=<bl
 | --- | --- |
 | `blocked/permission: <msg>` | Waits on a tool approval. `<msg>` names the command. |
 | `blocked/question: <msg>`, `blocked/auth: <msg>`, `blocked: <msg>` | Waits on an answer, a login or an open dialog. |
-| `done: <msg>` | The turn ended. |
+| `done: <msg>` | The turn ended. Read the last messages: a result, or a question under the question rule. |
 | `idle: <msg>` | The turn was cancelled. |
 | `error: <msg>` | The turn ended on an error, such as a session limit. `<msg>` is the error text. |
 | `gone: <why>` | The program exited or the block closed. The watch ends. |
 
-Updates while the worker is `working` print nothing. On arming, the watch prints the current state once if it is `blocked`, `done` or `error`. Run `rex capture` only when a line calls for a look.
+Updates while the worker is `working` print nothing. On arming, the watch prints the current state once if it is `blocked`, `done` or `error`. Read the transcript only when a line calls for a look.
 
 A program other than Claude Code may report no status. Check with `rex api call com.superlogical.terminal.program_status '{"session_id":"<id>","block_id":"<id>","args":{}}'`, which then returns no records. For such a program, fall back to a screen hash. Every 30 s, hash `rex capture -s <id> --trim | tail -40`, and print the tail once the hash stays the same for 3 minutes. Stop when the session leaves `rex ls`.
 
