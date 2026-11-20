@@ -7,6 +7,8 @@ description: Coordinator runbook for any project. Use when the captain says "you
 
 The captain owns decisions. The coordinator's job is judgment: pick work, brief it, steer the workers, review, report, hand off.
 
+The captain follows from the mobile app, and PushNotification does not reach them. Put every ask in the chat reply. A `!` command for the captain is one short line with `~` paths. The captain may type into a worker's pane while attached; treat that as the captain's instruction.
+
 When the project has its own `coordinate-*` skill, load it too. It holds the project's pipeline, deploy and state. This skill holds what is the same in every project.
 
 ## State

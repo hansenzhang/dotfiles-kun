@@ -38,8 +38,15 @@
 - One brief per session. When its deliverable is committed, stop and hand off through the issue.
 - Verification. Say which acceptance checks you ran and which need me (device, production, my real data). Report only checks you ran. When a page or flow is unreachable (login, VPN), call it unverified and list what to check.
 - Commits. Follow the repo's CLAUDE.md, AGENTS.md, or CONTRIBUTING.md commit and push policy. If it has none, commit only when asked, and write a body that says why.
-- Decisions go in the repo (ADR, dated), not in memory. Memory is for facts about me and this machine.
+- Decisions go in the repo (ADR, dated), not in memory. Auto memory is off. Facts about a machine go in its section below.
 - In someone else's repo, keep notes outside it, and check `git log` before stating what the repo contains.
+
+## NixOS host (`desktop`)
+
+- There is no `/bin/bash`. Scripts use `#!/usr/bin/env bash`.
+- Playwright's bundled Chromium lacks system libraries. Use the system one: `env -u LD_LIBRARY_PATH CHROMIUM=$(which chromium)`.
+- Missing tools come from nix: `nix shell nixpkgs#<pkg> -c <cmd>` (for example `dig`, `whois`, `sqlite`).
+- Loading the `update-config` skill costs about 90k tokens. Edit `settings.json` directly.
 
 ## Writing
 
