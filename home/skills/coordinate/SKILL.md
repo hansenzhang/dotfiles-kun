@@ -11,7 +11,7 @@ When the project has its own `coordinate-*` skill, load it too. It holds the pro
 
 ## State
 
-One handoff file per project, on the host and outside the repo: `~/.local/share/<project>/coordinator-handoff.md`. It holds what the next coordinator cannot read from the repo or the issues: what runs now and where, next steps in order, decisions waiting on the captain with a recommendation each, what is found but not filed.
+One handoff file per project, on the host and outside the repo: `~/.local/share/<project>/coordinator-handoff.md`. It holds what the next coordinator cannot read from the repo or the issues: what runs now and where, next steps in order, decisions waiting on the captain with a recommendation each, what is found but not filed. Keep it under 10 KB: every coordinator reads it whole at start. Move history to a dated archive file and running tallies to their issue.
 
 Decisions go on the issue or into an ADR. Lessons that outlast the session go into a skill, through a PR.
 
@@ -70,6 +70,8 @@ rex do -s <session-id> --for 30m ~/.claude/skills/coordinate/watch.lua block=<bl
 | `gone: <why>` | The program exited or the block closed. The watch ends. |
 
 Updates while the worker is `working` print nothing. On arming, the watch prints the current state once if it is `blocked`, `done` or `error`. Read the transcript only when a line calls for a look.
+
+A worker that waits on background runs ends a turn at every wait, so each wait prints `done:`. For such a worker, pipe the watch through a filter: on `done:`, read the transcript's last text and print it only when it matches `\?|pull/|PR #|opened|decision|recommend|denied`.
 
 A program other than Claude Code may report no status. Check with `rex api call com.superlogical.terminal.program_status '{"session_id":"<id>","block_id":"<id>","args":{}}'`, which then returns no records. For such a program, fall back to a screen hash. Every 30 s, hash `rex capture -s <id> --trim | tail -40`, and print the tail once the hash stays the same for 3 minutes. Stop when the session leaves `rex ls`.
 
