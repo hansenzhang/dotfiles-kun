@@ -22,11 +22,11 @@ Decisions go on the issue or into an ADR. Lessons that outlast the session go in
 1. Read the handoff file and the repo's `AGENTS.md`.
 2. Check CI on the default branch, open issues and open PRs.
 3. Find what still runs: `rex ls`, `treehouse status` in each repo for leased worktrees, background monitors, unmerged branches. Arm a watch on each running worker first.
-4. Give the captain the questions they must answer, each with a recommendation, then what you do next.
+4. Decide what is reversible and inside the captain's delegation, and post it on the issue. Ask the captain only about money, secrets, irreversible actions and product direction, each with a recommendation, then say what you do next.
 
 ## Briefs
 
-A brief is one worker's work order: a GitHub issue, or a comment on one, with the sections Decisions, Facts, Acceptance, Out of scope.
+A brief is cut from a spec issue that states the user's end-to-end flow. A brief that changes the flow updates the spec first. A brief is one worker's work order: a GitHub issue, or a comment on one, with the sections Decisions, Facts, Acceptance, Out of scope.
 
 - **Decisions:** every choice the worker would otherwise stop to ask about. Mark which are the captain's and which are yours, and tell the captain yours.
 - **Facts:** what the worker cannot find by looking: the captain's words, text from other repos, where data lives, what is off limits.
@@ -54,7 +54,7 @@ Every Claude session of the account draws on one session limit: the coordinator,
 
 ## Watching
 
-Arm a Monitor per worker and work on something else. A monitor lasts 30 minutes: re-arm on the expiry notice. A routine event gets one line to the captain.
+Arm a Monitor per worker and work on something else. Never run a foreground `sleep` before a check: the harness blocks it. A monitor lasts 30 minutes: re-arm on the expiry notice. A routine event gets one line to the captain.
 
 Claude Code reports its state to rex, and `watch.lua` (next to this file) turns that into one line per event that needs the coordinator:
 
@@ -81,6 +81,8 @@ A program other than Claude Code may report no status. Check with `rex api call 
 
 Vendor docs, prices, web search and broad code search go to a research worker in its own rex session, not to an in-process subagent and not inline. The captain can attach to a rex session and steer it, it outlives the coordinator, and the coordinator's context stays small.
 
+Before researching, search past sessions (`search-sessions` skill) and sibling repos' issues for the same question.
+
 - Ask for a short table of facts with source URLs.
 - Name where the report goes: an issue comment or a file. A rex session returns nothing to the coordinator by itself.
 - Arm a watch on it, read the report on `done`, then end the session.
@@ -91,8 +93,8 @@ Read every diff a worker merges or pushes. Report what you ran and what you only
 
 ## Handoff
 
-The captain switches sessions at about 20% of context used, which is about 200k tokens. The same threshold applies to the workers.
+At about 20% of context used (about 200k tokens), hand off without asking. The same threshold applies to the workers.
 
 1. Rewrite the handoff file in place. It is the only one.
 2. Move a lesson that will outlast the session into a skill, through a PR. Prune before adding.
-3. Start the replacement with the prompt `/coordinate` as a new window of the rex session `coordinator` (a new session of that label if none exists), and tell the captain.
+3. Start the replacement with the prompt `/coordinate` as a new window of the rex session `coordinator` (a new session of that label if none exists), and tell the captain. Do not kill the old session: auto mode denies it. Give the captain `! rex kill <id>`.
