@@ -1,6 +1,5 @@
 # global agent instructions
 
-- Be extremely concise. Sacrifice grammer for the sake of concision
 - Never use the em dash "—". Use plain dash "-" instead
 - When writing commit messages, NEVER auto-add your agent name as co-author
 - Never manually modify CHANGELOG.md files or any files that are marked as auto-generated
@@ -8,8 +7,7 @@
   Instead, prefer quality, simplicity, robustness, scalability, and long term maintainability.
 - Prefer the simplest change that works. Add config keys, generic mechanisms and abstractions only when asked, and mention a cleaner design as a follow-up.
 - For one-off or infrequent operational work, start with the simplest direct end-to-end path. Do not build wrappers, control planes, policy layers, custom verifiers, or automation unless the direct path exposes a concrete blocker or repeated need that justifies the added machinery.
-- When doing bug fixes, always start with reproducing the bug in an E2E setting as closely aligned with how an end user would experience it as possible.
-  This makes sure you find the real problem so your fix will actually solve it.
+- Bug fixes: reproduce the bug end to end as the user meets it, then write a failing test that goes red for that reason.
 - When end-to-end testing a product, be picky about the UI you see and be obsessed with pixel perfection.
   If something clearly looks off, even if it is not directly related to what you are doing, try to get it fixed along the way.
 - Apply that same high standard to engineering excellence: lint, test failures, and test flakiness.
@@ -28,7 +26,7 @@
   - A map in the repo's AGENTS.md lists the main directories and entry points in a few lines.
 - A spec is transient. Write one to settle what and why before building (a plan-mode plan, an issue body or a draft file). Cut it into briefs. When the work ships, delete or close the spec. What survives is the code, its tests, an ADR for each decision and a glossary entry for each new term.
 - Decide structure (boundaries, interfaces, dependencies) in the spec before coding, then encode it in directory layout and interfaces. Record non-obvious choices as ADRs.
-- Start bug fixes and well-specified logic with a failing test, and watch it go red for the right reason. For exploratory work, write tests with the code, in the same commit.
+- Start well-specified logic with a failing test, and watch it go red for the right reason. For exploratory work, write tests with the code, in the same commit.
 - Every `.md` in a repo is an ADR, a glossary, a map, or a spec or brief still in flight. Anything else is a candidate for deletion.
 - When you change code that a doc describes, fix or delete the doc in the same commit. If doc and code disagree, trust the code. Delete the doc when it only restates code.
 
