@@ -6,6 +6,12 @@
     "pr": ""
   },
   "model": "sonnet",
+  "permissions": {
+    "allow": [
+      "Bash(gh pr merge:*)",
+      "Bash(rex kill:*)"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {
