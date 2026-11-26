@@ -16,9 +16,9 @@ The same flake also defines two NixOS machines that share the Mac's shell, edito
   Run this every time you make a change.
 - `home/` - the actual config files that get symlinked into place; the sections below explain the shared symlink model and Pi's narrower selective setup.
 
-## Claude Code session hook
+## Claude Code session hooks
 
-`home/.claude/settings.json` runs `gh-axi` on every session start, so agents begin with the repo's open issues and PRs in context.
+`home/.claude/settings.json` runs `gh-axi` and Rex's session-start hook on every session start, so agents begin with the repo's open issues and PRs and their Rex session and pane in context.
 `home.nix` installs `gh-axi` and the other agent CLIs into `~/.npm-global` on rebuild, and `treehouse` and `no-mistakes` into `~/.local/bin`.
 
 ## Claude session archive

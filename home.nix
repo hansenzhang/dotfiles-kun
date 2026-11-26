@@ -124,8 +124,7 @@ in
   # Agent CLIs that aren't in nixpkgs, in ~/.npm-global on both platforms. Uses Nix's Node so the
   # Mac's nvm version doesn't matter. Installs only the missing ones; upgrade with
   # `npm update -g --prefix ~/.npm-global`.
-  # `setup hooks` is idempotent and adds the SessionStart hooks for Claude, Codex, OpenCode and
-  # Copilot. Claude's land in the linked settings.json, which already carries them.
+  # No `setup hooks`: Claude's SessionStart hooks (gh-axi and rex only) live in the repo settings.json.
   home.activation.npmGlobals = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     export PATH="${pkgs.nodejs_26}/bin:$HOME/.npm-global/bin:$PATH"
     missing=""
@@ -135,9 +134,6 @@ in
     if [ -n "$missing" ]; then
       run npm install -g --prefix "$HOME/.npm-global" $missing
     fi
-    for p in gh-axi lavish-axi chrome-devtools-axi; do
-      run $p setup hooks > /dev/null
-    done
   '';
 
   # treehouse and no-mistakes (worktree and validation tools) ship only as curl
@@ -201,8 +197,9 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/nvim";
   home.file.".config/rex".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/rex";
-  home.file.".claude/settings.json".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.claude/settings.json";
+  # A read-only store copy, not a live link: Claude rewrites settings.json on /model, /config and
+  # the like, and those changes must not land in the repo. Edit the repo file and rebuild instead.
+  home.file.".claude/settings.json".source = ./home/.claude/settings.json;
 
   # Keep Pi's credential and runtime state local by linking only authored files and directories.
   home.file.".pi/agent/themes".source =
