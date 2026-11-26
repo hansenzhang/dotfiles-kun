@@ -13,44 +13,54 @@ When the project has its own `coordinate-*` skill, load it too. It holds the pro
 
 ## State
 
-One handoff file per project, on the host and outside the repo: `~/.local/share/<project>/coordinator-handoff.md`. It holds what the next coordinator cannot read from the repo or the issues: what runs now and where, next steps in order, decisions waiting on the captain with a recommendation each, what is found but not filed. Keep it under 10 KB: every coordinator reads it whole at start. Move history to a dated archive file and running tallies to their issue.
+One coordinator per project at a time. Before starting, check `rex ls` for another coordinator on the same project; two coordinators appending to one handoff file overflow it.
 
-Decisions go on the issue or into an ADR. Lessons that outlast the session go into a skill, through a PR.
+One handoff file per project, on the host and outside the repo: `~/.local/share/<project>/coordinator-handoff.md`. It holds what the next coordinator cannot read from the repo or the issues: what runs now and where, next steps in order, decisions waiting on the captain with a recommendation each, what is found but not filed. Keep it under 10 KB: every coordinator reads it whole at start. Rewrite it, never append to it. State for paused work goes to a side file next to it, named in one line of the handoff file and read only when that work resumes. Move history to a dated archive file and running tallies to their issue.
+
+Decisions go on the issue or into an ADR. Lessons that outlast the session go into a skill, through a commit to the repo that holds it.
 
 ## Start of a session
 
 1. Read the handoff file and the repo's `AGENTS.md`.
 2. Check CI on the default branch, open issues and open PRs.
-3. Find what still runs: `rex ls`, `treehouse status` in each repo for leased worktrees, background monitors, unmerged branches. Arm a watch on each running worker first.
+3. Find what still runs: `rex ls`, `treehouse status` in each repo for leased worktrees, background monitors, unmerged branches. Arm a watch on each running worker first. Report each lease that no running worker and no paused brief holds, with its branch and whether it has unpushed commits, and give the captain the `treehouse return` line for it.
 4. Decide what is reversible and inside the captain's delegation, and post it on the issue. Ask the captain only about money, secrets, irreversible actions and product direction, each with a recommendation, then say what you do next.
 
 ## Briefs
 
-A brief is cut from a spec issue that states the user's end-to-end flow. A brief that changes the flow updates the spec first. A brief is one worker's work order: a GitHub issue, or a comment on one, with the sections Decisions, Facts, Acceptance, Out of scope.
+A brief is cut from a spec issue that states the user's end-to-end flow. A brief that changes the flow updates the spec first. A brief is one worker's work order: a GitHub issue, or a comment on one, with the sections Decisions, Facts, Acceptance, Out of scope. When the project's tracker is not GitHub, or the work is local only, the project's `coordinate-*` skill names where briefs live instead. Delete or close a brief when its work ships.
+
+A brief covers one phase. When the captain adds a phase, write a new brief and start a fresh worker for it with **Replace in place** below; do not append the phase to a running brief.
 
 - **Decisions:** every choice the worker would otherwise stop to ask about. Mark which are the captain's and which are yours, and tell the captain yours.
 - **Facts:** what the worker cannot find by looking: the captain's words, text from other repos, where data lives, what is off limits.
 - **Acceptance:** checks the worker can run itself. Name what stays unverified. A brief that ends in a PR includes the `pr-polish` author pass.
-- **Limits:** where data and secrets stay, which services and directories to leave alone, how much CPU and memory to leave free.
+- **Limits:** where data and secrets stay, which services and directories to leave alone, how much CPU, memory and disk to leave free. Build caches can fill a disk in hours: check free disk space whenever a worker builds.
 
 ## Workers in rex sessions
 
 A worker that must outlive the coordinator's session runs in a rex session. The captain can attach to it.
 
-- **Worktree:** in the repo, `treehouse get --lease -b <branch> --lease-holder <label>` leases a worktree on a new branch and prints its path. Pass that path as `-c` below, and tell the worker to work there and create no worktree of its own. The lease holds until `treehouse return <path>`.
+- **Worktree:** in the repo, `treehouse get --lease -b <branch> --lease-holder <label>` leases a worktree on a new branch and prints its path. Pass that path as `-c` below, and tell the worker to work there and create no worktree of its own. The lease holds until `treehouse return <path>`. One worker per worktree: never start a second worker in a leased path.
 - **Start:** `sid=$(uuidgen)`, then `rex new <label> -c <worktree path> --keep-open --shell zsh -- zsh -lic "claude --model <id> --permission-mode auto --disallowedTools AskUserQuestion --session-id $sid '<prompt>'"`. Keep `$sid`: the worker's transcript is `~/.claude/projects/<worktree path with / and . replaced by ->/$sid.jsonl`. `--disallowedTools` takes several values, so keep another flag between it and the prompt. Point the prompt at the brief and end it with the question rule below. The login shell puts `claude` on PATH; a bare `-- claude` fails with "command not found". `rex new` has no `--focus` flag and leaves the captain's app view where it is.
 - **Address by ID:** a SessionStart hook tells each Claude session to rename its own rex session, so the label given to `rex new` does not last. Add `--json` to `rex new` and keep `.session_id` and `.initial_windows[0].block_ids[0]`. Pass the session ID, or its last 6 characters from `rex ls`, as `-s` in every command below. The watch needs the block ID.
 - **Folder-trust prompt** (first run in a directory): `rex send-key -s <label> down enter`.
 - **Question rule** (end every worker prompt with it): "When you need a decision the brief does not make, end your turn with the question as your final message: what you found, the options, and the one you recommend. Wait for the answer. If auto mode denies an action, report the action and the reason the same way, and do not retry it."
 - **Read:** the worker's last messages, from its transcript: `jq -r 'select(.type=="assistant") | .message.content[]? | select(.type=="text") | .text' <transcript> | tail -40`. The file can lag by a moment, so read it again when the turn looks cut short. Claude Code's fullscreen TUI has no scrollback, so `rex capture -s <label> --trim | tail -40` shows only the current screen. Use it for what the transcript does not hold: the folder-trust prompt, a permission prompt, a login.
 - **Steer or answer:** `rex send -s <label> '<text>' && rex send-key -s <label> enter`. Answer with the chosen option's words and any facts the worker lacked. Text sent during a busy turn can be lost: confirm it in the transcript's user messages. Grey text in the input box is Claude Code's suggested prompt, not the captain's typing; sent text replaces it. Put long instructions in an issue or PR comment and send a pointer to it.
-- **Denied actions:** an auto-mode denial is the captain's call. Never approve it by typing into the worker, and do not retry it from your own session. Tell the captain the action, the reason and your recommendation. The captain runs it with `!` in a session or adds an allow rule.
+- **Denied actions:** an auto-mode denial is the captain's call. Never approve it by typing into the worker, and do not retry it from your own session. Tell the captain the action, the reason and your recommendation. The captain runs it with `!` in a session or adds an allow rule. A permission prompt on a worker's screen is the captain's call too: do not accept or decline it with keys.
 - **List and end:** `rex ls`, `rex kill <label>`. Once the branch is merged or abandoned, release the worktree with `treehouse return <worktree path>`, then delete the branch with `git branch -d <branch>`, which the return keeps.
 - **Replace in place:** `rex window new -s <label> -c <worktree path> --focus=false --keep-open --shell zsh --json -- zsh -lic "claude --model <id> --permission-mode auto --disallowedTools AskUserQuestion --session-id $sid '<prompt>'"` (a new `sid`) starts the replacement as a new window of the same session, so the label stays and no `<label>-2` appears. `--focus=false` keeps the old window active, so a captain viewing the session stays where they are. Close the old window with `rex window ls -s <label>` and `rex window close -s <label> <number>`; the replacement then becomes the active window, and `-s <label>` reads and steers it. Add `-w <number>` to `capture`, `send` and `send-key` to address one window. Arm the watch on the new `.block_ids[0]`.
 - **Paused by the captain:** resume only when the captain says so.
-- **Context:** the status line shows the share used. At 20% used the worker hands off: a handoff comment on its brief, then its replacement as a new window of its own session.
+- **Context:** the status line shows the share used. At 20% used the worker hands off: a handoff comment on its brief, then its replacement as a new window of its own session. Auto-compaction is not a handoff. When a worker's transcript shows a compaction, replace it in place.
 
-Every Claude session of the account draws on one session limit: the coordinator, each worker and each worker's subworkers. Cap the workers so the limit holds until the reset, and tell each worker its cap.
+## Usage limits
+
+Every Claude session of the account draws on one 5-hour limit and one weekly limit: the coordinator, each worker and each worker's subagents.
+
+- An interactive `claude` in a rex session waits at the limit and continues by itself at the reset. The watch prints `error:`; do nothing and do not send "continue".
+- An in-process subagent (Agent tool) dies at the limit with "Agent terminated early" and is never resumed. Start it again after the reset.
+- Cap the workers so both limits hold until the captain's deadline, and tell each worker its cap. Check the weekly share left before starting long Opus runs; when it cannot hold, ask the captain which work to drop.
 
 ## Watching
 
@@ -73,7 +83,11 @@ rex do -s <session-id> --for 30m ~/.claude/skills/coordinate/watch.lua block=<bl
 
 Updates while the worker is `working` print nothing. On arming, the watch prints the current state once if it is `blocked`, `done` or `error`. Read the transcript only when a line calls for a look.
 
-A worker that waits on background runs ends a turn at every wait, so each wait prints `done:`. For such a worker, pipe the watch through a filter: on `done:`, read the transcript's last text and print it only when it matches `\?|pull/|PR #|opened|decision|recommend|denied`.
+A worker that waits on background runs ends a turn at every wait, so each wait prints `done:`. For such a worker, use `watch-filtered.sh` (next to this file) as the Monitor command: it prints a `done:` line only when the worker's last text looks like a result or a question.
+
+```sh
+~/.claude/skills/coordinate/watch-filtered.sh <session-id> <block-id> <transcript>
+```
 
 A program other than Claude Code may report no status. Check with `rex api call com.superlogical.terminal.program_status '{"session_id":"<id>","block_id":"<id>","args":{}}'`, which then returns no records. For such a program, fall back to a screen hash. Every 30 s, hash `rex capture -s <id> --trim | tail -40`, and print the tail once the hash stays the same for 3 minutes. Stop when the session leaves `rex ls`.
 
@@ -91,12 +105,17 @@ Before researching, search past sessions (`search-sessions` skill) and sibling r
 
 Read every diff a worker merges or pushes. Report what you ran and what you only read. A worker's "tests pass" is its claim until you run them.
 
-Before a PR merges, a polish reviewer runs the `pr-polish` reviewer pass on it. Start it as an in-process subagent with the Agent tool, given only the PR number and the brief's link: it is short, read-only and reports on the PR, so it needs no rex session. Send its findings to the worker, then rerun the tests on the fixed head. When the captain asks for the same cleanup on two PRs, that request is a missing rule: add it to `pr-polish` through a PR.
+Before a PR merges, or before a local-only branch is called done, two reviewers run in a fresh context, each as an in-process subagent given only the PR number or branch and the brief's link:
+
+- the `pr-polish` reviewer pass, for cruft;
+- `/code-review high` on the same diff, for correctness. pr-polish does not look for bugs.
+
+They are short and read-only, so they need no rex session; one that dies at a usage limit is started again after the reset. Send their findings to the worker, then rerun the tests on the fixed head. When the captain asks for the same cleanup on two PRs, that request is a missing rule: add it to `pr-polish` through a PR.
 
 ## Handoff
 
-At about 20% of context used (about 200k tokens), hand off without asking. The same threshold applies to the workers.
+At about 20% of context used (about 200k tokens), hand off without asking. The same threshold applies to the workers. A coordinator that has been compacted is past it: hand off now.
 
-1. Rewrite the handoff file in place. It is the only one.
-2. Move a lesson that will outlast the session into a skill, through a PR. Prune before adding.
+1. Rewrite the handoff file in place, with side files only for paused work (see State).
+2. Move a lesson that will outlast the session into a skill. Prune before adding.
 3. Start the replacement with the prompt `/coordinate` as a new window of the rex session `coordinator` (a new session of that label if none exists), and tell the captain. Do not kill the old session: auto mode denies it. Give the captain `! rex kill <id>`.
