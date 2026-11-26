@@ -9,7 +9,7 @@ let
   # github.com/mattpocock/skills (see home/skills/LICENSE-mattpocock).
   skills = lib.genAttrs [
     "unslop" "search-sessions" "coordinate" "rex"
-    "writing-for-agents" "grilling" "diagnosing-bugs"
+    "writing-for-agents" "grilling" "diagnosing-bugs" "pr-polish"
   ] (name: "${dotfiles}/home/skills/${name}");
 
   # Runs every 15 minutes: a systemd timer on Linux, a launchd agent on the Mac.

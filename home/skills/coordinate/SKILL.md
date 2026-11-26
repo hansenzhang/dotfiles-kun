@@ -30,7 +30,7 @@ A brief is cut from a spec issue that states the user's end-to-end flow. A brief
 
 - **Decisions:** every choice the worker would otherwise stop to ask about. Mark which are the captain's and which are yours, and tell the captain yours.
 - **Facts:** what the worker cannot find by looking: the captain's words, text from other repos, where data lives, what is off limits.
-- **Acceptance:** checks the worker can run itself. Name what stays unverified.
+- **Acceptance:** checks the worker can run itself. Name what stays unverified. A brief that ends in a PR includes the `pr-polish` author pass.
 - **Limits:** where data and secrets stay, which services and directories to leave alone, how much CPU and memory to leave free.
 
 ## Workers in rex sessions
@@ -90,6 +90,8 @@ Before researching, search past sessions (`search-sessions` skill) and sibling r
 ## Review
 
 Read every diff a worker merges or pushes. Report what you ran and what you only read. A worker's "tests pass" is its claim until you run them.
+
+Before a PR merges, a polish reviewer runs the `pr-polish` reviewer pass on it. Start it as an in-process subagent with the Agent tool, given only the PR number and the brief's link: it is short, read-only and reports on the PR, so it needs no rex session. Send its findings to the worker, then rerun the tests on the fixed head. When the captain asks for the same cleanup on two PRs, that request is a missing rule: add it to `pr-polish` through a PR.
 
 ## Handoff
 
