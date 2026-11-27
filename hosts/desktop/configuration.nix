@@ -2,7 +2,7 @@
 
 # Desktop dual-booting with Windows 11 on the same NVMe. Install: docs/desktop-nixos.md.
 {
-  imports = [ ./hardware.nix ./microvm.nix ];
+  imports = [ ./hardware.nix ./microvm.nix ./github-runners.nix ];
 
   networking.hostName = "desktop";
   networking.networkmanager.enable = true;
