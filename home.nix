@@ -124,7 +124,7 @@ in
   # Agent CLIs that aren't in nixpkgs, in ~/.npm-global on both platforms. Uses Nix's Node so the
   # Mac's nvm version doesn't matter. Installs only the missing ones; upgrade with
   # `npm update -g --prefix ~/.npm-global`.
-  # No `setup hooks`: Claude's SessionStart hooks (gh-axi and rex only) live in the repo settings.json.
+  # No `setup hooks`: Claude's SessionStart hook (gh-axi only) lives in the repo settings.json.
   home.activation.npmGlobals = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     export PATH="${pkgs.nodejs_26}/bin:$HOME/.npm-global/bin:$PATH"
     missing=""
