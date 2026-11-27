@@ -5,7 +5,7 @@
     "commit": "",
     "pr": ""
   },
-  "model": "sonnet",
+  "model": "opus",
   "permissions": {
     "allow": [
       "Bash(gh pr merge:*)",
