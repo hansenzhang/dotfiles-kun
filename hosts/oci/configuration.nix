@@ -2,6 +2,8 @@
 
 # The Oracle Cloud Ampere A1 server. Install and recovery: docs/oracle-cloud-nixos.md.
 {
+  imports = [ ./github-runners.nix ];
+
   networking.hostName = "oci";
   time.timeZone = "UTC";
 
